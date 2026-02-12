@@ -1,31 +1,31 @@
 
 ---
 
-# README Documento Arquitectónico
+# 📄 README-ARQUITECTURA
 
 ```markdown
-# 🏗️ CCS Monitoring – Architecture Documentation
+# 🏗️ Documentación de Arquitectura – CCS Monitoring
 
-Technical architecture document for the CCS vehicle monitoring central platform.
-
----
-
-## 🎯 Architectural Objectives
-
-- Process 500 signals per second
-- Emergency response under 2 seconds
-- 20% annual growth scalability
-- High availability
-- Zero shared state
-- OLTP / OLAP separation
+Documento técnico que describe la arquitectura lógica y técnica de la central de monitoreo CCS.
 
 ---
 
-# 🔴 DOMAIN LAYER
+## 🎯 Objetivos Arquitectónicos
 
-Pure business logic. No framework dependencies.
+- Procesar 500 señales por segundo
+- Ejecutar acciones de emergencia en menos de 2 segundos
+- Soportar crecimiento anual del 20%
+- Alta disponibilidad
+- Escalabilidad horizontal
+- Separación OLTP / OLAP
 
-## Entities
+---
+
+# 🔴 CAPA DOMAIN
+
+Lógica pura del negocio, sin dependencias de frameworks.
+
+## Entidades
 - Vehicle
 - Signal
 - Rule
@@ -39,11 +39,11 @@ Pure business logic. No framework dependencies.
 - RuleCondition
 - AlertLevel
 
-## Domain Services
+## Servicios de Dominio
 - RuleEngine
 - EmergencyDetector
 
-## Ports
+## Puertos
 
 ### Input Ports
 - ProcessSignalUseCase
@@ -59,147 +59,134 @@ Pure business logic. No framework dependencies.
 
 ---
 
-# 🔵 APPLICATION LAYER
+# 🔵 CAPA APPLICATION
 
-Coordinates domain logic and transactions.
+Orquesta los casos de uso.
 
-## Services
+## Servicios
 - ProcessSignalService
 - HandleEmergencyService
 - ConfigureRuleService
 
-## Responsibilities
-- Transaction control
-- DTO validation
-- Mapping DTO ↔ Domain
-- Use case orchestration
+Responsabilidades:
+- Control transaccional
+- Validación de DTOs
+- Conversión DTO ↔ Dominio
+- Coordinación de lógica
 
 ---
 
-# 🟢 INFRASTRUCTURE LAYER
+# 🟢 CAPA INFRASTRUCTURE
 
-Implements external concerns.
+Implementación técnica de los puertos.
 
+Incluye:
 - REST Controllers
 - RabbitMQ Listeners
-- JPA Adapters
+- JPA Repositories
 - Redis Cache Adapter
-- Flyway Migrations
-- Spring Configuration
+- Configuración Spring
+- Migraciones Flyway
 
 ---
 
-# 📊 Database Design
+# 📊 Modelo de Base de Datos
 
-## 1️⃣ Schema Separation
-
-operational (OLTP)
+## Esquema operational (OLTP)
 - vehicles
 - rules
 - alerts
 
-telemetry (OLAP)
+## Esquema telemetry (OLAP)
 - vehicle_signals (Hypertable)
-- signals_hourly (Continuous Aggregate)
+- signals_hourly
 
-Prevents:
+Separación diseñada para evitar:
 - Lock contention
-- Query degradation
+- Saturación por consultas analíticas
 
 ---
 
-# 📬 Messaging Architecture
+# 📬 Arquitectura de Mensajería
 
-## RabbitMQ Queues
+## RabbitMQ con 3 Colas
 
-Emergency Queue
-- Dedicated workers
-- Guaranteed <2s SLA
+### Emergency Queue
+- Workers dedicados
+- Garantiza SLA < 2s
 
-Signals Queue
-- High throughput processing
-- Batch optimized
+### Signals Queue
+- Procesamiento masivo
+- Batch optimizado
 
-Notifications Queue
-- Lower priority
+### Notifications Queue
+- Prioridad baja
 
-Enables:
-- Independent scaling
-- Fault isolation
+Permite:
+- Escalado independiente
+- Aislamiento de fallos
 
 ---
 
-# ⚙️ Performance Strategy
+# ⚙️ Estrategia de Performance
 
 ## Dual DataSource
-- OLTP pool: 20 connections
-- Telemetry pool: 50 connections
+- Pool OLTP: 20 conexiones
+- Pool Telemetría: 50 conexiones
 
-## Redis Multi-Level Cache
-- L1: In-memory
+## Redis Multi-Nivel
+- L1: Memoria local
 - L2: Redis
 
-## Time-Series Optimization
-- Daily partitioning
-- Compression after 7 days
-- 180-day retention
+## TimescaleDB
+- Particionamiento diario
+- Compresión automática
+- Retención 180 días
 
 ---
 
-# 📈 Scalability Model
+# 📈 Modelo de Escalabilidad
 
-Stateless services.
+Sistema stateless.
 
-Scaling approach:
-- Add application pods
-- Increase RabbitMQ consumers
-- Scale database vertically or add read replicas
+Escalado:
+- Agregando pods
+- Aumentando consumidores RabbitMQ
+- Añadiendo réplicas de lectura
 
-From:
-- 500 signals/sec
-To:
-- 5,000+ signals/sec
-
----
-
-# 🛡️ Availability Model
-
-- Multi-AZ deployment
-- RDS automatic failover
-- Redis cluster
-- RabbitMQ cluster
-- Dead Letter Queues
-- Circuit breaker pattern for external integrations
-
-No single point of failure.
+Escala de:
+- 500 señales/s
+hasta:
+- 5,000+ señales/s
 
 ---
 
-# 🧠 Architectural Patterns Applied
+# 🛡️ Modelo de Disponibilidad
 
-- Hexagonal Architecture
+- Multi-AZ
+- Failover automático en RDS
+- Redis Cluster
+- RabbitMQ Cluster
+- Dead Letter Queue
+- Circuit Breaker
+
+No existe punto único de falla.
+
+---
+
+# 🧠 Patrones Aplicados
+
+- Arquitectura Hexagonal
 - Domain-Driven Design
 - Event-Driven Architecture
-- CQRS (lightweight)
-- Cache-Aside Pattern
+- CQRS ligero
+- Cache-Aside
 - Bulkhead Pattern
-- Circuit Breaker Pattern
-- Stateless Services
+- Circuit Breaker
 - Horizontal Scaling
 
 ---
 
-# 🚀 Production Recommendation
+# 🚀 Conclusión
 
-- Deploy on Kubernetes (EKS)
-- Enable HPA
-- Enable metrics with Prometheus
-- Centralized logging
-- Distributed tracing
-
----
-
-# 📌 Conclusion
-
-The system is designed for high-throughput telemetric ingestion with strict emergency SLAs, supporting independent scaling of components while maintaining strong domain integrity and separation of concerns.
-
+La solución está diseñada para soportar alta concurrencia, garantizar tiempos de respuesta críticos en emergencias y permitir crecimiento sostenido sin rediseños estructurales.
