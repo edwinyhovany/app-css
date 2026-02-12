@@ -1,0 +1,12 @@
+com\example\hexagonal_users_api\domain\port\out\UserRepository.class
+com\example\hexagonal_users_api\HexagonalUsersApiApplication.class
+com\example\hexagonal_users_api\infraestructure\adapter\outbound\persistence\mapper\UserEntityMapper.class
+com\example\hexagonal_users_api\application\dto\UserResponse.class
+com\example\hexagonal_users_api\domain\model\User.class
+com\example\hexagonal_users_api\infraestructure\adapter\inbound\rest\UserController.class
+com\example\hexagonal_users_api\infraestructure\adapter\outbound\persistence\entity\UserEntity.class
+com\example\hexagonal_users_api\infraestructure\adapter\outbound\persistence\repository\UserJpaRepository.class
+com\example\hexagonal_users_api\application\mapper\UserResponseMapper.class
+com\example\hexagonal_users_api\application\service\GetAllUsersService.class
+com\example\hexagonal_users_api\domain\port\in\GetAllUsersUseCase.class
+com\example\hexagonal_users_api\infraestructure\adapter\outbound\persistence\UserRepositoryAdapter.class

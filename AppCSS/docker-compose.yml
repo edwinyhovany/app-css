@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PostgreSQL con TimescaleDB
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: ccs-postgres
+    environment:
+      POSTGRES_DB: ccs_db
+      POSTGRES_USER: ccs_user
+      POSTGRES_PASSWORD: ccs_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ccs-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ccs_user -d ccs_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ con Management UI
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: ccs-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    networks:
+      - ccs-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: ccs-redis
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ccs-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  ccs-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

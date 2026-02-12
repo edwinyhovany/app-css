@@ -1,0 +1,36 @@
+// Clase de java pura que define como va  aser el modelo User
+// No depende de frameworks ni librerías externas.
+package com.example.hexagonal_users_api.domain.model;
+
+public class User {
+    private final Long id;
+    private final String name;
+    private final String email;
+
+    public User(Long id, String name, String email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
+}

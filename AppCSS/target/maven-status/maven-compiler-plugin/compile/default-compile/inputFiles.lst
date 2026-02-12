@@ -1,0 +1,12 @@
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\application\dto\UserResponse.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\application\mapper\UserResponseMapper.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\application\service\GetAllUsersService.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\domain\model\User.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\domain\port\in\GetAllUsersUseCase.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\domain\port\out\UserRepository.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\HexagonalUsersApiApplication.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\infraestructure\adapter\inbound\rest\UserController.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\infraestructure\adapter\outbound\persistence\entity\UserEntity.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\infraestructure\adapter\outbound\persistence\mapper\UserEntityMapper.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\infraestructure\adapter\outbound\persistence\repository\UserJpaRepository.java
+C:\proyecto\app-css\hexagonal-users-api-mejorada\src\main\java\com\example\hexagonal_users_api\infraestructure\adapter\outbound\persistence\UserRepositoryAdapter.java
