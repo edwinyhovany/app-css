@@ -1,232 +1,92 @@
-\# CCS Monitoring API
+# 🚛 CCS Monitoring Platform
 
+Plataforma central de monitoreo de vehículos para la Compañía Colombiana de Seguimiento (CCS), diseñada bajo Arquitectura Hexagonal, Domain-Driven Design y arquitectura orientada a eventos.
 
-
-Sistema central de monitoreo para la Compañía Colombiana de Seguimiento (CCS), diseñado bajo Arquitectura Hexagonal (Ports \& Adapters), orientado a procesamiento de señales masivas, eventos de emergencia en tiempo real y reglas configurables por propietario.
-
-
-
-El sistema soporta:
-
-\- Procesamiento de hasta 500 señales por segundo
-
-\- Ejecución de acciones de emergencia en menos de 2 segundos
-
-\- Escalabilidad horizontal
-
-\- Separación OLTP / OLAP
-
-\- Procesamiento asíncrono basado en eventos
-
-
+![Java](https://img.shields.io/badge/Java-17-orange)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3-green)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
+![TimescaleDB](https://img.shields.io/badge/TimescaleDB-Time--Series-9cf)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Event--Driven-ff6600)
+![Redis](https://img.shields.io/badge/Redis-Cache-red)
+![Arquitectura](https://img.shields.io/badge/Arquitectura-Hexagonal-blueviolet)
 
 ---
 
+## 🎯 Características Principales
 
-
-\# 1. Arquitectura
-
-
-
-Se implementa Arquitectura Hexagonal (Clean Architecture + DDD).
-
-
-
-\## Capas
-
-
-
-\### Domain
-
-\- Entidades: Vehicle, Signal, Rule, Alert, EmergencyEvent
-
-\- Value Objects: VehicleId, Coordinates, SignalType, RuleCondition, AlertLevel
-
-\- Servicios de Dominio: RuleEngine
-
-\- Puertos (Ports):
-
-&nbsp; - Input: ProcessSignalUseCase, HandleEmergencyUseCase, ConfigureRuleUseCase
-
-&nbsp; - Output: VehicleRepository, SignalRepository, RuleRepository, AlertRepository, NotificationService
-
-\- Sin dependencias de frameworks
-
-
-
-\### Application
-
-\- Orquesta casos de uso
-
-\- Contiene DTOs y mappers
-
-\- Implementa lógica transaccional
-
-\- Servicios:
-
-&nbsp; - ProcessSignalService
-
-&nbsp; - HandleEmergencyService
-
-&nbsp; - ConfigureRuleService
-
-
-
-\### Infrastructure
-
-\- REST Controllers
-
-\- RabbitMQ Listeners
-
-\- JPA Repositories
-
-\- Redis Cache Adapter
-
-\- Configuración Spring Boot
-
-\- Persistencia PostgreSQL + TimescaleDB
-
-
+### Núcleo del Sistema
+- ✅ Procesamiento de hasta **500 señales por segundo**
+- 🚨 Gestión de emergencias en **menos de 2 segundos**
+- ⚡ Arquitectura orientada a eventos (Event-Driven)
+- 🧠 Motor de reglas configurable por propietario
+- 📊 Base de datos optimizada para series de tiempo (TimescaleDB)
+- 🔄 Procesamiento asíncrono con RabbitMQ
+- 🗄️ Separación OLTP / OLAP
+- 🚀 Escalabilidad horizontal
+- 🛡️ Alta disponibilidad sin punto único de falla
 
 ---
 
+## 🏗️ Arquitectura
 
 
-\# 2. Stack Tecnológico
-
-
-
-\- Java 17
-
-\- Spring Boot 3
-
-\- Spring Web
-
-\- Spring Data JPA
-
-\- PostgreSQL
-
-\- TimescaleDB
-
-\- Redis
-
-\- RabbitMQ
-
-\- Flyway
-
-\- Docker
-
-\- Maven
-
-
+### Architectural Style
+- Hexagonal Architecture (Ports & Adapters)
+- Domain-Driven Design
+- Event-Driven Architecture
+- CQRS (lightweight)
+- Stateless Services
 
 ---
 
+## 🚀 Tech Stack
 
-
-\# 3. Esquema de Base de Datos
-
-
-
-Separación por esquemas:
-
-
-
-\## operational (OLTP)
-
-\- vehicles
-
-\- rules
-
-\- alerts
-
-
-
-Optimizado para:
-
-\- Transacciones
-
-\- Estado actual
-
-\- Dashboard en tiempo real
-
-
-
-\## telemetry (OLAP masivo)
-
-\- vehicle\_signals (Hypertable)
-
-\- signals\_hourly (Continuous Aggregate)
-
-
-
-Optimizado para:
-
-\- Escritura masiva
-
-\- Consultas históricas
-
-\- Compresión automática
-
-\- Retención 180 días
-
-
+### Backend
+- **Language:** Java 17
+- **Framework:** Spring Boot 3
+- **Architecture:** Hexagonal + DDD
+- **Persistence:** Spring Data JPA
+- **Messaging:** RabbitMQ
+- **Cache:** Redis (multi-level)
+- **Database:** PostgreSQL + TimescaleDB
+- **Migrations:** Flyway
+- **Build Tool:** Maven
+- **Containerization:** Docker
 
 ---
 
+## 📊 Database Architecture
 
+### OLTP Schema (`operational`)
+- vehicles
+- rules
+- alerts
 
-\# 4. Modelo Entidad-Relación
+Optimized for:
+- Transactions
+- Real-time dashboards
+- Fast updates
 
+### OLAP Schema (`telemetry`)
+- vehicle_signals (Hypertable)
+- signals_hourly (Continuous aggregate)
 
-
-Relaciones principales:
-
-
-
-\- vehicles 1:N rules
-
-\- rules 1:N alerts
-
-\- vehicles 1:N alerts
-
-\- vehicles 1:N vehicle\_signals
-
-
-
-vehicle\_signals es hypertable particionada por tiempo.
-
-
+Optimized for:
+- High write throughput
+- Time-series queries
+- Automatic compression (after 7 days)
+- 180-day retention policy
 
 ---
 
+## 📦 Installation
 
+### Prerequisites
+- Java 21+
+- Maven 3.9+
+- Docker & Docker Compose
 
-\# 5. Instalación del Entorno
-
-
-
-\## Requisitos
-
-
-
-\- Java 17
-
-\- Maven 3.9+
-
-\- Docker y Docker Compose
-
-
-
-\## Clonar proyecto
-
-
-
+### Clone Repository
 ```bash
-
-git clone <repository>
-
+git clone https://github.com/YOUR_USERNAME/ccs-monitoring.git
 cd hexagonal-users-api-mejorada
-
-
-
