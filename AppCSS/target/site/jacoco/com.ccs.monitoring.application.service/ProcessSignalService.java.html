@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProcessSignalService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.application.service</a> &gt; <span class="el_source">ProcessSignalService.java</span></div><h1>ProcessSignalService.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.application.service;
+
+import com.ccs.monitoring.application.dto.SignalDTO;
+import com.ccs.monitoring.application.mapper.SignalMapper;
+import com.ccs.monitoring.domain.model.Alert;
+import com.ccs.monitoring.domain.model.Rule;
+import com.ccs.monitoring.domain.model.Signal;
+import com.ccs.monitoring.domain.port.in.ProcessSignalUseCase;
+import com.ccs.monitoring.domain.port.out.*;
+import com.ccs.monitoring.domain.service.RuleEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@Transactional
+public class ProcessSignalService implements ProcessSignalUseCase {
+    
+<span class="fc" id="L22">    private static final Logger log = LoggerFactory.getLogger(ProcessSignalService.class);</span>
+    
+    private final SignalRepository signalRepository;
+    private final RuleRepository ruleRepository;
+    private final AlertRepository alertRepository;
+    private final NotificationService notificationService;
+    private final CacheService cacheService;
+    private final RuleEngine ruleEngine;
+    private final SignalMapper signalMapper;
+    
+    public ProcessSignalService(
+            SignalRepository signalRepository,
+            RuleRepository ruleRepository,
+            AlertRepository alertRepository,
+            NotificationService notificationService,
+            CacheService cacheService,
+            RuleEngine ruleEngine,
+<span class="fc" id="L39">            SignalMapper signalMapper) {</span>
+<span class="fc" id="L40">        this.signalRepository = signalRepository;</span>
+<span class="fc" id="L41">        this.ruleRepository = ruleRepository;</span>
+<span class="fc" id="L42">        this.alertRepository = alertRepository;</span>
+<span class="fc" id="L43">        this.notificationService = notificationService;</span>
+<span class="fc" id="L44">        this.cacheService = cacheService;</span>
+<span class="fc" id="L45">        this.ruleEngine = ruleEngine;</span>
+<span class="fc" id="L46">        this.signalMapper = signalMapper;</span>
+<span class="fc" id="L47">    }</span>
+    
+    @Override
+    public void processSignal(SignalDTO signalDTO) {
+<span class="fc" id="L51">        long startTime = System.currentTimeMillis();</span>
+        
+        try {
+            // 1. Convertir DTO a entidad de dominio
+<span class="fc" id="L55">            Signal signal = signalMapper.toDomain(signalDTO);</span>
+            
+            // 2. Persistir señal
+<span class="fc" id="L58">            Signal savedSignal = signalRepository.save(signal);</span>
+<span class="fc" id="L59">            log.debug(&quot;Signal saved: {} for vehicle {}&quot;, savedSignal.getId(), signal.getVehicleId());</span>
+            
+            // 3. Obtener reglas activas (con cache)
+<span class="fc" id="L62">            List&lt;Rule&gt; activeRules = cacheService.getRules(signal.getVehicleId());</span>
+            
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">            if (activeRules == null) {</span>
+<span class="fc" id="L65">                log.debug(&quot;Cache miss for vehicle {}, loading from DB&quot;, signal.getVehicleId());</span>
+<span class="fc" id="L66">                activeRules = ruleRepository.findActiveRulesByVehicleId(signal.getVehicleId());</span>
+<span class="fc" id="L67">                cacheService.putRules(signal.getVehicleId(), activeRules);</span>
+            }
+            
+            // 4. Evaluar reglas usando el motor de dominio
+<span class="fc" id="L71">            List&lt;Alert&gt; alerts = ruleEngine.evaluateRules(savedSignal, activeRules);</span>
+            
+            // 5. Procesar alertas generadas
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            for (Alert alert : alerts) {</span>
+<span class="fc" id="L75">                alertRepository.save(alert);</span>
+                
+                // 6. Enviar notificaciones
+<span class="fc" id="L78">                Rule triggeredRule = activeRules.stream()</span>
+<span class="fc" id="L79">                    .filter(r -&gt; r.getId().equals(alert.getRuleId()))</span>
+<span class="fc" id="L80">                    .findFirst()</span>
+<span class="fc" id="L81">                    .orElse(null);</span>
+                    
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">                if (triggeredRule != null) {</span>
+<span class="fc" id="L84">                    executeRuleActions(triggeredRule, alert);</span>
+                }
+<span class="fc" id="L86">            }</span>
+            
+<span class="fc" id="L88">            long duration = System.currentTimeMillis() - startTime;</span>
+<span class="fc" id="L89">            log.info(&quot;Signal processed in {}ms - {} alerts generated&quot;, duration, alerts.size());</span>
+            
+<span class="nc" id="L91">        } catch (Exception e) {</span>
+<span class="nc" id="L92">            log.error(&quot;Error processing signal for vehicle {}: {}&quot;, </span>
+<span class="nc" id="L93">                signalDTO.getVehicleId(), e.getMessage(), e);</span>
+<span class="nc" id="L94">            throw e;</span>
+<span class="fc" id="L95">        }</span>
+<span class="fc" id="L96">    }</span>
+    
+    private void executeRuleActions(Rule rule, Alert alert) {
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        for (Rule.RuleAction action : rule.getActions()) {</span>
+            try {
+<span class="nc bnc" id="L101" title="All 5 branches missed.">                switch (action) {</span>
+                    case SEND_SMS:
+<span class="nc" id="L103">                        notificationService.sendSMS(&quot;+573001234567&quot;, alert.getMessage());</span>
+<span class="nc" id="L104">                        break;</span>
+                    case SEND_EMAIL:
+<span class="nc" id="L106">                        notificationService.sendEmail(</span>
+                            &quot;owner@ccs.com&quot;, 
+<span class="nc" id="L108">                            &quot;Alert: &quot; + alert.getRuleName(), </span>
+<span class="nc" id="L109">                            alert.getMessage()</span>
+                        );
+<span class="nc" id="L111">                        break;</span>
+                    case CALL_AUTHORITIES:
+<span class="nc" id="L113">                        notificationService.callAuthorities(alert);</span>
+<span class="nc" id="L114">                        break;</span>
+                    case NOTIFY_OWNER:
+<span class="nc" id="L116">                        notificationService.sendPushNotification(&quot;owner123&quot;, alert.getMessage());</span>
+<span class="nc" id="L117">                        break;</span>
+                    default:
+<span class="nc" id="L119">                        log.debug(&quot;Action {} not implemented&quot;, action);</span>
+                        break;
+                }
+<span class="nc" id="L122">            } catch (Exception e) {</span>
+<span class="nc" id="L123">                log.error(&quot;Error executing action {}: {}&quot;, action, e.getMessage());</span>
+<span class="nc" id="L124">            }</span>
+<span class="nc" id="L125">        }</span>
+<span class="fc" id="L126">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

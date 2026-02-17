@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RedisCacheAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.adapter.outbound.persistence.cache</a> &gt; <span class="el_source">RedisCacheAdapter.java</span></div><h1>RedisCacheAdapter.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.adapter.outbound.persistence.cache;
+
+import com.ccs.monitoring.domain.model.Rule;
+import com.ccs.monitoring.domain.port.out.CacheService;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Component
+public class RedisCacheAdapter implements CacheService {
+    
+<span class="fc" id="L19">    private static final Logger log = LoggerFactory.getLogger(RedisCacheAdapter.class);</span>
+    private static final String CACHE_PREFIX = &quot;rules:vehicle:&quot;;
+<span class="fc" id="L21">    private static final Duration CACHE_TTL = Duration.ofMinutes(10);</span>
+    
+    // L1 Cache - In-memory (más rápido)
+<span class="fc" id="L24">    private final Map&lt;String, List&lt;Rule&gt;&gt; l1Cache = new ConcurrentHashMap&lt;&gt;();</span>
+    
+    // L2 Cache - Redis (compartido entre instancias)
+    private final RedisTemplate&lt;String, Object&gt; redisTemplate;
+    
+<span class="fc" id="L29">    public RedisCacheAdapter(RedisTemplate&lt;String, Object&gt; redisTemplate) {</span>
+<span class="fc" id="L30">        this.redisTemplate = redisTemplate;</span>
+<span class="fc" id="L31">    }</span>
+    
+    @Override
+    public List&lt;Rule&gt; getRules(VehicleId vehicleId) {
+<span class="nc" id="L35">        String key = vehicleId.getValue();</span>
+        
+        // 1. Buscar en L1 (in-memory)
+<span class="nc" id="L38">        List&lt;Rule&gt; rules = l1Cache.get(key);</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (rules != null) {</span>
+<span class="nc" id="L40">            log.debug(&quot;L1 Cache HIT for vehicle: {}&quot;, vehicleId);</span>
+<span class="nc" id="L41">            return rules;</span>
+        }
+        
+        // 2. Buscar en L2 (Redis)
+<span class="nc" id="L45">        String redisKey = CACHE_PREFIX + key;</span>
+        try {
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L48">            List&lt;Rule&gt; cachedRules = (List&lt;Rule&gt;) redisTemplate.opsForValue().get(redisKey);</span>
+            
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            if (cachedRules != null) {</span>
+<span class="nc" id="L51">                log.debug(&quot;L2 Cache HIT for vehicle: {}&quot;, vehicleId);</span>
+                // Guardar en L1 para siguiente acceso
+<span class="nc" id="L53">                l1Cache.put(key, cachedRules);</span>
+<span class="nc" id="L54">                return cachedRules;</span>
+            }
+<span class="nc" id="L56">        } catch (Exception e) {</span>
+<span class="nc" id="L57">            log.warn(&quot;Error reading from Redis cache: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L58">        }</span>
+        
+<span class="nc" id="L60">        log.debug(&quot;Cache MISS for vehicle: {}&quot;, vehicleId);</span>
+<span class="nc" id="L61">        return null;</span>
+    }
+    
+    @Override
+    public void putRules(VehicleId vehicleId, List&lt;Rule&gt; rules) {
+<span class="nc" id="L66">        String key = vehicleId.getValue();</span>
+        
+        // Guardar en L1
+<span class="nc" id="L69">        l1Cache.put(key, rules);</span>
+        
+        // Guardar en L2 con TTL
+<span class="nc" id="L72">        String redisKey = CACHE_PREFIX + key;</span>
+        try {
+<span class="nc" id="L74">            redisTemplate.opsForValue().set(redisKey, rules, CACHE_TTL);</span>
+<span class="nc" id="L75">            log.debug(&quot;Rules cached for vehicle: {} (TTL: {})&quot;, vehicleId, CACHE_TTL);</span>
+<span class="nc" id="L76">        } catch (Exception e) {</span>
+<span class="nc" id="L77">            log.warn(&quot;Error writing to Redis cache: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L78">        }</span>
+<span class="nc" id="L79">    }</span>
+    
+    @Override
+    public void invalidate(VehicleId vehicleId) {
+<span class="nc" id="L83">        String key = vehicleId.getValue();</span>
+        
+        // Invalidar L1
+<span class="nc" id="L86">        l1Cache.remove(key);</span>
+        
+        // Invalidar L2
+<span class="nc" id="L89">        String redisKey = CACHE_PREFIX + key;</span>
+        try {
+<span class="nc" id="L91">            redisTemplate.delete(redisKey);</span>
+<span class="nc" id="L92">            log.debug(&quot;Cache invalidated for vehicle: {}&quot;, vehicleId);</span>
+<span class="nc" id="L93">        } catch (Exception e) {</span>
+<span class="nc" id="L94">            log.warn(&quot;Error invalidating Redis cache: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L95">        }</span>
+<span class="nc" id="L96">    }</span>
+    
+    @Override
+    public void clearAll() {
+<span class="nc" id="L100">        l1Cache.clear();</span>
+<span class="nc" id="L101">        log.info(&quot;L1 Cache cleared&quot;);</span>
+        // Redis se limpia por TTL automático
+<span class="nc" id="L103">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

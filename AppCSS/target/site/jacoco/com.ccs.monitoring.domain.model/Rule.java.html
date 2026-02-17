@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Rule.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.domain.model</a> &gt; <span class="el_source">Rule.java</span></div><h1>Rule.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.domain.model;
+
+import com.ccs.monitoring.domain.valueobject.RuleCondition;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public class Rule {
+    private final Long id;
+    private final VehicleId vehicleId;
+    private final String name;
+    private final RuleCondition condition;
+    private final List&lt;RuleAction&gt; actions;
+    private boolean active;
+    private final LocalDateTime createdAt;
+    private LocalDateTime lastExecutedAt;
+    
+<span class="fc" id="L20">    public Rule(Long id, VehicleId vehicleId, String name, RuleCondition condition) {</span>
+<span class="fc" id="L21">        this.id = id;</span>
+<span class="fc" id="L22">        this.vehicleId = Objects.requireNonNull(vehicleId, &quot;VehicleId cannot be null&quot;);</span>
+<span class="fc" id="L23">        this.name = Objects.requireNonNull(name, &quot;Rule name cannot be null&quot;);</span>
+<span class="fc" id="L24">        this.condition = Objects.requireNonNull(condition, &quot;Condition cannot be null&quot;);</span>
+<span class="fc" id="L25">        this.actions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L26">        this.active = true;</span>
+<span class="fc" id="L27">        this.createdAt = LocalDateTime.now();</span>
+<span class="fc" id="L28">    }</span>
+    
+    public boolean evaluate(Signal signal) {
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (!active) {</span>
+<span class="fc" id="L32">            return false;</span>
+        }
+<span class="fc" id="L34">        return condition.evaluate(signal);</span>
+    }
+    
+    public void addAction(RuleAction action) {
+<span class="fc" id="L38">        this.actions.add(Objects.requireNonNull(action, &quot;Action cannot be null&quot;));</span>
+<span class="fc" id="L39">    }</span>
+    
+    public void execute() {
+<span class="fc" id="L42">        this.lastExecutedAt = LocalDateTime.now();</span>
+<span class="fc" id="L43">    }</span>
+    
+    public void activate() {
+<span class="fc" id="L46">        this.active = true;</span>
+<span class="fc" id="L47">    }</span>
+    
+    public void deactivate() {
+<span class="fc" id="L50">        this.active = false;</span>
+<span class="fc" id="L51">    }</span>
+    
+    // Getters
+<span class="fc" id="L54">    public Long getId() { return id; }</span>
+<span class="fc" id="L55">    public VehicleId getVehicleId() { return vehicleId; }</span>
+<span class="fc" id="L56">    public String getName() { return name; }</span>
+<span class="fc" id="L57">    public RuleCondition getCondition() { return condition; }</span>
+<span class="fc" id="L58">    public List&lt;RuleAction&gt; getActions() { return new ArrayList&lt;&gt;(actions); }</span>
+<span class="fc" id="L59">    public boolean isActive() { return active; }</span>
+<span class="fc" id="L60">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="fc" id="L61">    public LocalDateTime getLastExecutedAt() { return lastExecutedAt; }</span>
+    
+<span class="fc" id="L63">    public enum RuleAction {</span>
+<span class="fc" id="L64">        SEND_SMS,</span>
+<span class="fc" id="L65">        SEND_EMAIL,</span>
+<span class="fc" id="L66">        CALL_AUTHORITIES,</span>
+<span class="fc" id="L67">        NOTIFY_OWNER,</span>
+<span class="fc" id="L68">        TRIGGER_ALARM,</span>
+<span class="fc" id="L69">        LOG_EVENT</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

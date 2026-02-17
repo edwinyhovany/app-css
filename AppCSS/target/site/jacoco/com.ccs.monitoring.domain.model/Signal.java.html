@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Signal.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.domain.model</a> &gt; <span class="el_source">Signal.java</span></div><h1>Signal.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.domain.model;
+
+import com.ccs.monitoring.domain.valueobject.Coordinates;
+import com.ccs.monitoring.domain.valueobject.SignalType;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.Map;
+
+public class Signal {
+    private final Long id;
+    private final VehicleId vehicleId;
+    private final SignalType signalType;
+    private final LocalDateTime timestamp;
+    private final Coordinates coordinates;
+    private final BigDecimal speed;
+    private final BigDecimal direction;
+    private final BigDecimal temperature;
+    private final String cargoStatus;
+    private final boolean emergency;
+    private Map&lt;String, Object&gt; metadata;
+    
+<span class="fc" id="L24">    private Signal(SignalBuilder builder) {</span>
+<span class="fc" id="L25">        this.id = builder.id;</span>
+<span class="fc" id="L26">        this.vehicleId = Objects.requireNonNull(builder.vehicleId, &quot;VehicleId cannot be null&quot;);</span>
+<span class="fc" id="L27">        this.signalType = Objects.requireNonNull(builder.signalType, &quot;SignalType cannot be null&quot;);</span>
+<span class="fc" id="L28">        this.timestamp = Objects.requireNonNull(builder.timestamp, &quot;Timestamp cannot be null&quot;);</span>
+<span class="fc" id="L29">        this.coordinates = builder.coordinates;</span>
+<span class="fc" id="L30">        this.speed = builder.speed;</span>
+<span class="fc" id="L31">        this.direction = builder.direction;</span>
+<span class="fc" id="L32">        this.temperature = builder.temperature;</span>
+<span class="fc" id="L33">        this.cargoStatus = builder.cargoStatus;</span>
+<span class="fc" id="L34">        this.emergency = builder.emergency;</span>
+<span class="fc" id="L35">        this.metadata = builder.metadata;</span>
+<span class="fc" id="L36">    }</span>
+    
+    public boolean isEmergency() {
+<span class="fc" id="L39">        return emergency;</span>
+    }
+    
+    public boolean isHighSpeed() {
+<span class="pc bpc" id="L43" title="2 of 4 branches missed.">        return speed != null &amp;&amp; speed.compareTo(BigDecimal.valueOf(120)) &gt; 0;</span>
+    }
+    
+    public boolean hasCargoTemperatureAlert() {
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        return temperature != null &amp;&amp; </span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">               (temperature.compareTo(BigDecimal.valueOf(-5)) &lt; 0 || </span>
+<span class="pc bnc" id="L49" title="All 2 branches missed.">                temperature.compareTo(BigDecimal.valueOf(30)) &gt; 0);</span>
+    }
+    
+    // Getters
+<span class="fc" id="L53">    public Long getId() { return id; }</span>
+<span class="fc" id="L54">    public VehicleId getVehicleId() { return vehicleId; }</span>
+<span class="fc" id="L55">    public SignalType getSignalType() { return signalType; }</span>
+<span class="fc" id="L56">    public LocalDateTime getTimestamp() { return timestamp; }</span>
+<span class="fc" id="L57">    public Coordinates getCoordinates() { return coordinates; }</span>
+<span class="fc" id="L58">    public BigDecimal getSpeed() { return speed; }</span>
+<span class="fc" id="L59">    public BigDecimal getDirection() { return direction; }</span>
+<span class="fc" id="L60">    public BigDecimal getTemperature() { return temperature; }</span>
+<span class="fc" id="L61">    public String getCargoStatus() { return cargoStatus; }</span>
+    //public String getMetadata() { return metadata; }
+<span class="fc" id="L63">    public Map&lt;String, Object&gt; getMetadata() {  return metadata;</span>
+}
+    public static SignalBuilder builder() {
+<span class="fc" id="L66">        return new SignalBuilder();</span>
+    }
+    
+<span class="fc" id="L69">    public static class SignalBuilder {</span>
+        private Long id;
+        private VehicleId vehicleId;
+        private SignalType signalType;
+        private LocalDateTime timestamp;
+        private Coordinates coordinates;
+        private BigDecimal speed;
+        private BigDecimal direction;
+        private BigDecimal temperature;
+        private String cargoStatus;
+        private boolean emergency;
+        //private String metadata;
+        private Map&lt;String, Object&gt; metadata;
+        
+        public SignalBuilder id(Long id) {
+<span class="fc" id="L84">            this.id = id;</span>
+<span class="fc" id="L85">            return this;</span>
+        }
+        
+        public SignalBuilder vehicleId(VehicleId vehicleId) {
+<span class="fc" id="L89">            this.vehicleId = vehicleId;</span>
+<span class="fc" id="L90">            return this;</span>
+        }
+        
+        public SignalBuilder signalType(SignalType signalType) {
+<span class="fc" id="L94">            this.signalType = signalType;</span>
+<span class="fc" id="L95">            return this;</span>
+        }
+        
+        public SignalBuilder timestamp(LocalDateTime timestamp) {
+<span class="fc" id="L99">            this.timestamp = timestamp;</span>
+<span class="fc" id="L100">            return this;</span>
+        }
+        
+        public SignalBuilder coordinates(Coordinates coordinates) {
+<span class="fc" id="L104">            this.coordinates = coordinates;</span>
+<span class="fc" id="L105">            return this;</span>
+        }
+        
+        public SignalBuilder speed(BigDecimal speed) {
+<span class="fc" id="L109">            this.speed = speed;</span>
+<span class="fc" id="L110">            return this;</span>
+        }
+        
+        public SignalBuilder direction(BigDecimal direction) {
+<span class="fc" id="L114">            this.direction = direction;</span>
+<span class="fc" id="L115">            return this;</span>
+        }
+        
+        public SignalBuilder temperature(BigDecimal temperature) {
+<span class="fc" id="L119">            this.temperature = temperature;</span>
+<span class="fc" id="L120">            return this;</span>
+        }
+        
+        public SignalBuilder cargoStatus(String cargoStatus) {
+<span class="fc" id="L124">            this.cargoStatus = cargoStatus;</span>
+<span class="fc" id="L125">            return this;</span>
+        }
+        
+        public SignalBuilder emergency(boolean emergency) {
+<span class="fc" id="L129">            this.emergency = emergency;</span>
+<span class="fc" id="L130">            return this;</span>
+        }
+        
+     
+        public SignalBuilder metadata(Map&lt;String, Object&gt; metadata) {
+<span class="fc" id="L135">            this.metadata = metadata;</span>
+<span class="fc" id="L136">            return this;</span>
+        }
+        
+        public Signal build() {
+<span class="fc" id="L140">            return new Signal(this);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

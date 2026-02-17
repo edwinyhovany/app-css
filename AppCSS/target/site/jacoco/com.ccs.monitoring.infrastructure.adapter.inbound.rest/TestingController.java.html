@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TestingController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.adapter.inbound.rest</a> &gt; <span class="el_source">TestingController.java</span></div><h1>TestingController.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.adapter.inbound.rest;
+
+import com.ccs.monitoring.application.dto.SignalDTO;
+import com.ccs.monitoring.infrastructure.config.RabbitMQConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+
+
+@RestController
+@RequestMapping(&quot;/api/v1/testing&quot;)
+public class TestingController {
+    
+<span class="fc" id="L23">    private static final Logger log = LoggerFactory.getLogger(TestingController.class);</span>
+    
+    private final RabbitTemplate rabbitTemplate;
+    private final JdbcTemplate jdbcTemplate;
+    
+<span class="fc" id="L28">public TestingController(RabbitTemplate rabbitTemplate, JdbcTemplate jdbcTemplate) {</span>
+<span class="fc" id="L29">    this.rabbitTemplate = rabbitTemplate;</span>
+<span class="fc" id="L30">    this.jdbcTemplate = jdbcTemplate;</span>
+<span class="fc" id="L31">}</span>
+    
+    /**
+     * TEST 1: Throughput - 500 señales/segundo
+     * 
+     * Ejemplos:
+     * - 10 segundos: /testing/throughput?signalsPerSecond=500&amp;durationSeconds=10
+     * - 2 minutos: /testing/throughput?signalsPerSecond=500&amp;durationSeconds=120
+     */
+    @PostMapping(&quot;/throughput&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; testThroughput(
+            @RequestParam(defaultValue = &quot;500&quot;) int signalsPerSecond,
+            @RequestParam(defaultValue = &quot;10&quot;) int durationSeconds) {
+        
+<span class="nc" id="L45">        log.warn(&quot;🧪 THROUGHPUT TEST STARTED: {} signals/s for {} seconds&quot;, </span>
+<span class="nc" id="L46">            signalsPerSecond, durationSeconds);</span>
+        
+<span class="nc" id="L48">        long startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L49">        int totalSignals = signalsPerSecond * durationSeconds;</span>
+<span class="nc" id="L50">        int signalsSent = 0;</span>
+        
+<span class="nc" id="L52">        List&lt;String&gt; vehicles = Arrays.asList(</span>
+            &quot;VEH001&quot;, &quot;VEH002&quot;, &quot;VEH003&quot;, &quot;VEH004&quot;, &quot;VEH005&quot;,
+            &quot;VEH006&quot;, &quot;VEH007&quot;, &quot;VEH008&quot;, &quot;VEH009&quot;, &quot;VEH010&quot;
+        );
+        
+        try {
+            // Enviar en batches para mantener throughput
+<span class="nc" id="L59">            int batchSize = 50;</span>
+<span class="nc" id="L60">            long delayBetweenBatches = Math.max(1, (1000 * batchSize) / signalsPerSecond);</span>
+            
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            for (int i = 0; i &lt; totalSignals; i += batchSize) {</span>
+<span class="nc" id="L63">                int remaining = Math.min(batchSize, totalSignals - i);</span>
+                
+<span class="nc bnc" id="L65" title="All 2 branches missed.">                for (int j = 0; j &lt; remaining; j++) {</span>
+<span class="nc" id="L66">                    String vehicleId = vehicles.get(</span>
+<span class="nc" id="L67">                        ThreadLocalRandom.current().nextInt(vehicles.size())</span>
+                    );
+                    
+<span class="nc" id="L70">                    SignalDTO signal = createRandomSignal(vehicleId);</span>
+                    
+<span class="nc" id="L72">                    rabbitTemplate.convertAndSend(</span>
+                        RabbitMQConfig.EXCHANGE,
+                        &quot;signal.normal&quot;,
+                        signal,
+                        message -&gt; {
+<span class="nc" id="L77">                            message.getMessageProperties().setHeader(&quot;__TypeId__&quot;, &quot;signal&quot;);</span>
+<span class="nc" id="L78">                            return message;</span>
+                        }
+                    );
+                    
+<span class="nc" id="L82">                    signalsSent++;</span>
+                }
+                
+                // Pequeña pausa para mantener throughput
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                if (i + batchSize &lt; totalSignals) {</span>
+                    try {
+<span class="nc" id="L88">                        Thread.sleep(delayBetweenBatches);</span>
+<span class="nc" id="L89">                    } catch (InterruptedException e) {</span>
+<span class="nc" id="L90">                        Thread.currentThread().interrupt();</span>
+<span class="nc" id="L91">                        break;</span>
+<span class="nc" id="L92">                    }</span>
+                }
+                
+                // Log de progreso cada 5000 señales
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                if (signalsSent % 5000 == 0) {</span>
+<span class="nc" id="L97">                    log.info(&quot;📊 Progress: {} signals sent&quot;, signalsSent);</span>
+                }
+            }
+            
+<span class="nc" id="L101">        } catch (Exception e) {</span>
+<span class="nc" id="L102">            log.error(&quot;❌ Error during throughput test: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L103">        }</span>
+        
+<span class="nc" id="L105">        long duration = System.currentTimeMillis() - startTime;</span>
+<span class="nc" id="L106">        double actualThroughput = (signalsSent * 1000.0) / duration;</span>
+<span class="nc" id="L107">        double targetThroughput = signalsPerSecond;</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        boolean passed = actualThroughput &gt;= (targetThroughput * 0.9); // 90% del objetivo</span>
+        
+<span class="nc" id="L110">        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L111">        response.put(&quot;targetThroughput&quot;, signalsPerSecond + &quot; signals/s&quot;);</span>
+<span class="nc" id="L112">        response.put(&quot;durationSeconds&quot;, durationSeconds);</span>
+<span class="nc" id="L113">        response.put(&quot;totalSignalsSent&quot;, signalsSent);</span>
+<span class="nc" id="L114">        response.put(&quot;actualDurationMs&quot;, duration);</span>
+<span class="nc" id="L115">        response.put(&quot;actualThroughput&quot;, String.format(&quot;%.2f signals/s&quot;, actualThroughput));</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        response.put(&quot;status&quot;, passed ? &quot;✅ PASSED&quot; : &quot;⚠️ BELOW TARGET&quot;);</span>
+<span class="nc" id="L117">        response.put(&quot;efficiency&quot;, String.format(&quot;%.1f%%&quot;, (actualThroughput / targetThroughput) * 100));</span>
+        
+<span class="nc" id="L119">        log.warn(&quot;📊 THROUGHPUT TEST COMPLETED: {} signals in {}ms ({} signals/s) - {}&quot;, </span>
+<span class="nc" id="L120">            signalsSent, duration, String.format(&quot;%.2f&quot;, actualThroughput), </span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            passed ? &quot;PASSED&quot; : &quot;BELOW TARGET&quot;);</span>
+        
+<span class="nc" id="L123">        return ResponseEntity.ok(response);</span>
+    }
+    
+    /**
+     * TEST 2: Escenario completo - Camión refrigerado
+     */
+    @PostMapping(&quot;/scenario/refrigerated-truck/{vehicleId}&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; refrigeratedTruckScenario(
+            @PathVariable String vehicleId) {
+        
+<span class="nc" id="L133">        log.warn(&quot;🧪 SCENARIO TEST STARTED: Refrigerated truck - {}&quot;, vehicleId);</span>
+        
+<span class="nc" id="L135">        List&lt;Map&lt;String, Object&gt;&gt; events = new ArrayList&lt;&gt;();</span>
+        
+        // Evento 1: Operación normal
+<span class="nc" id="L138">        log.info(&quot;📡 Event 1: Normal operation&quot;);</span>
+<span class="nc" id="L139">        SignalDTO signal1 = new SignalDTO();</span>
+<span class="nc" id="L140">        signal1.setVehicleId(vehicleId);</span>
+<span class="nc" id="L141">        signal1.setSignalType(&quot;NORMAL&quot;);</span>
+<span class="nc" id="L142">        signal1.setTimestamp(LocalDateTime.now());</span>
+<span class="nc" id="L143">        signal1.setSpeed(BigDecimal.valueOf(80));</span>
+<span class="nc" id="L144">        signal1.setTemperature(BigDecimal.valueOf(2));</span>
+<span class="nc" id="L145">        signal1.setCargoStatus(&quot;REFRIGERATED&quot;);</span>
+<span class="nc" id="L146">        signal1.setLatitude(BigDecimal.valueOf(4.6097));</span>
+<span class="nc" id="L147">        signal1.setLongitude(BigDecimal.valueOf(-74.0817));</span>
+<span class="nc" id="L148">        signal1.setEmergency(false);</span>
+        
+<span class="nc" id="L150">        sendNormalSignal(signal1);</span>
+<span class="nc" id="L151">        events.add(Map.of(</span>
+<span class="nc" id="L152">            &quot;timestamp&quot;, LocalDateTime.now().toString(),</span>
+            &quot;event&quot;, &quot;Normal operation&quot;,
+<span class="nc" id="L154">            &quot;speed&quot;, 80,</span>
+<span class="nc" id="L155">            &quot;temp&quot;, 2,</span>
+            &quot;alert&quot;, &quot;None&quot;
+        ));
+        
+<span class="nc" id="L159">        sleep(2000);</span>
+        
+        // Evento 2: Exceso de velocidad
+<span class="nc" id="L162">        log.warn(&quot;⚠️ Event 2: Speed violation&quot;);</span>
+<span class="nc" id="L163">        SignalDTO signal2 = new SignalDTO();</span>
+<span class="nc" id="L164">        signal2.setVehicleId(vehicleId);</span>
+<span class="nc" id="L165">        signal2.setSignalType(&quot;NORMAL&quot;);</span>
+<span class="nc" id="L166">        signal2.setTimestamp(LocalDateTime.now());</span>
+<span class="nc" id="L167">        signal2.setSpeed(BigDecimal.valueOf(120)); // EXCEDE 90</span>
+<span class="nc" id="L168">        signal2.setTemperature(BigDecimal.valueOf(3));</span>
+<span class="nc" id="L169">        signal2.setCargoStatus(&quot;REFRIGERATED&quot;);</span>
+<span class="nc" id="L170">        signal2.setLatitude(BigDecimal.valueOf(4.6200));</span>
+<span class="nc" id="L171">        signal2.setLongitude(BigDecimal.valueOf(-74.0900));</span>
+<span class="nc" id="L172">        signal2.setEmergency(false);</span>
+        
+<span class="nc" id="L174">        sendNormalSignal(signal2);</span>
+<span class="nc" id="L175">        events.add(Map.of(</span>
+<span class="nc" id="L176">            &quot;timestamp&quot;, LocalDateTime.now().toString(),</span>
+            &quot;event&quot;, &quot;⚠️ SPEED VIOLATION&quot;,
+<span class="nc" id="L178">            &quot;speed&quot;, 120,</span>
+<span class="nc" id="L179">            &quot;temp&quot;, 3,</span>
+            &quot;alert&quot;, &quot;SMS + Email sent to owner&quot;
+        ));
+        
+<span class="nc" id="L183">        sleep(3000);</span>
+        
+        // Evento 3: Temperatura fuera de rango
+<span class="nc" id="L186">        log.warn(&quot;🌡️ Event 3: Temperature violation&quot;);</span>
+<span class="nc" id="L187">        SignalDTO signal3 = new SignalDTO();</span>
+<span class="nc" id="L188">        signal3.setVehicleId(vehicleId);</span>
+<span class="nc" id="L189">        signal3.setSignalType(&quot;NORMAL&quot;);</span>
+<span class="nc" id="L190">        signal3.setTimestamp(LocalDateTime.now());</span>
+<span class="nc" id="L191">        signal3.setSpeed(BigDecimal.valueOf(85));</span>
+<span class="nc" id="L192">        signal3.setTemperature(BigDecimal.valueOf(10)); // EXCEDE 5</span>
+<span class="nc" id="L193">        signal3.setCargoStatus(&quot;REFRIGERATED&quot;);</span>
+<span class="nc" id="L194">        signal3.setLatitude(BigDecimal.valueOf(4.6300));</span>
+<span class="nc" id="L195">        signal3.setLongitude(BigDecimal.valueOf(-74.1000));</span>
+<span class="nc" id="L196">        signal3.setEmergency(false);</span>
+        
+<span class="nc" id="L198">        sendNormalSignal(signal3);</span>
+<span class="nc" id="L199">        events.add(Map.of(</span>
+<span class="nc" id="L200">            &quot;timestamp&quot;, LocalDateTime.now().toString(),</span>
+            &quot;event&quot;, &quot;🌡️ TEMPERATURE VIOLATION&quot;,
+<span class="nc" id="L202">            &quot;speed&quot;, 85,</span>
+<span class="nc" id="L203">            &quot;temp&quot;, 10,</span>
+            &quot;alert&quot;, &quot;SMS + Alarm triggered&quot;
+        ));
+        
+<span class="nc" id="L207">        sleep(2000);</span>
+        
+        // Evento 4: EMERGENCIA
+<span class="nc" id="L210">        log.error(&quot;🚨 Event 4: EMERGENCY - Panic button&quot;);</span>
+<span class="nc" id="L211">        SignalDTO signal4 = new SignalDTO();</span>
+<span class="nc" id="L212">        signal4.setVehicleId(vehicleId);</span>
+<span class="nc" id="L213">        signal4.setSignalType(&quot;PANIC_BUTTON&quot;);</span>
+<span class="nc" id="L214">        signal4.setTimestamp(LocalDateTime.now());</span>
+<span class="nc" id="L215">        signal4.setSpeed(BigDecimal.valueOf(0));</span>
+<span class="nc" id="L216">        signal4.setTemperature(BigDecimal.valueOf(12));</span>
+<span class="nc" id="L217">        signal4.setCargoStatus(&quot;REFRIGERATED&quot;);</span>
+<span class="nc" id="L218">        signal4.setLatitude(BigDecimal.valueOf(4.6400));</span>
+<span class="nc" id="L219">        signal4.setLongitude(BigDecimal.valueOf(-74.1100));</span>
+<span class="nc" id="L220">        signal4.setEmergency(true);</span>
+        
+<span class="nc" id="L222">        sendEmergencySignal(signal4);</span>
+<span class="nc" id="L223">        events.add(Map.of(</span>
+<span class="nc" id="L224">            &quot;timestamp&quot;, LocalDateTime.now().toString(),</span>
+            &quot;event&quot;, &quot;🚨 EMERGENCY - PANIC BUTTON&quot;,
+<span class="nc" id="L226">            &quot;speed&quot;, 0,</span>
+<span class="nc" id="L227">            &quot;temp&quot;, 12,</span>
+            &quot;alert&quot;, &quot;Authorities called + SMS + Owner notified&quot;
+        ));
+        
+<span class="nc" id="L231">        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L232">        response.put(&quot;scenario&quot;, &quot;Refrigerated Truck Complete Journey&quot;);</span>
+<span class="nc" id="L233">        response.put(&quot;vehicleId&quot;, vehicleId);</span>
+<span class="nc" id="L234">        response.put(&quot;totalEvents&quot;, 4);</span>
+<span class="nc" id="L235">        response.put(&quot;rulesTriggered&quot;, 3);</span>
+<span class="nc" id="L236">        response.put(&quot;events&quot;, events);</span>
+<span class="nc" id="L237">        response.put(&quot;status&quot;, &quot;✅ Scenario completed successfully&quot;);</span>
+        
+<span class="nc" id="L239">        log.warn(&quot;✅ SCENARIO TEST COMPLETED&quot;);</span>
+        
+<span class="nc" id="L241">        return ResponseEntity.ok(response);</span>
+    }
+    
+    /**
+     * TEST 3: Health check del módulo de testing
+     */
+    @GetMapping(&quot;/health&quot;)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; testingHealth() {
+<span class="nc" id="L249">        Map&lt;String, Object&gt; health = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L250">        health.put(&quot;status&quot;, &quot;UP&quot;);</span>
+<span class="nc" id="L251">        health.put(&quot;module&quot;, &quot;Testing Controller&quot;);</span>
+<span class="nc" id="L252">        health.put(&quot;availableTests&quot;, Arrays.asList(</span>
+            &quot;POST /api/v1/testing/throughput&quot;,
+            &quot;POST /api/v1/testing/scenario/refrigerated-truck/{vehicleId}&quot;
+        ));
+<span class="nc" id="L256">        return ResponseEntity.ok(health);</span>
+    }
+    // Crear Regla
+@PostMapping(&quot;/rules&quot;)
+public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; createTestRule(@RequestBody Map&lt;String, Object&gt; request) {
+    
+<span class="nc" id="L262">    log.info(&quot;🧪 TEST: Creating rule - {}&quot;, request.get(&quot;name&quot;));</span>
+    
+    try {
+<span class="nc" id="L265">        String sql = &quot;&quot;&quot;</span>
+            INSERT INTO operational.rules 
+            (vehicle_id, name, condition_type, condition_parameter, 
+             condition_operator, condition_value, actions, active, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, CURRENT_TIMESTAMP)
+            RETURNING id
+            &quot;&quot;&quot;;
+        
+<span class="nc" id="L273">        List&lt;String&gt; actions = (List&lt;String&gt;) request.getOrDefault(&quot;actions&quot;, </span>
+<span class="nc" id="L274">            Arrays.asList(&quot;SEND_SMS&quot;));</span>
+<span class="nc" id="L275">        String actionsJson = &quot;[&quot; + actions.stream()</span>
+<span class="nc" id="L276">            .map(a -&gt; &quot;\&quot;&quot; + a + &quot;\&quot;&quot;)</span>
+<span class="nc" id="L277">            .collect(Collectors.joining(&quot;,&quot;)) + &quot;]&quot;;</span>
+        
+<span class="nc" id="L279">        Long ruleId = jdbcTemplate.queryForObject(</span>
+            sql,
+            Long.class,
+<span class="nc" id="L282">            request.get(&quot;vehicleId&quot;),</span>
+<span class="nc" id="L283">            request.get(&quot;name&quot;),</span>
+<span class="nc" id="L284">            request.get(&quot;conditionType&quot;),</span>
+<span class="nc" id="L285">            request.get(&quot;conditionParameter&quot;),</span>
+<span class="nc" id="L286">            request.get(&quot;conditionOperator&quot;),</span>
+<span class="nc" id="L287">            request.get(&quot;conditionValue&quot;),</span>
+            actionsJson,
+<span class="nc" id="L289">            request.getOrDefault(&quot;active&quot;, true)</span>
+        );
+        
+<span class="nc" id="L292">        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L293">        response.put(&quot;status&quot;, &quot;✅ Rule created&quot;);</span>
+<span class="nc" id="L294">        response.put(&quot;id&quot;, ruleId);</span>
+<span class="nc" id="L295">        response.put(&quot;vehicleId&quot;, request.get(&quot;vehicleId&quot;));</span>
+<span class="nc" id="L296">        response.put(&quot;name&quot;, request.get(&quot;name&quot;));</span>
+        
+<span class="nc" id="L298">        return ResponseEntity.ok(response);</span>
+        
+<span class="nc" id="L300">    } catch (Exception e) {</span>
+<span class="nc" id="L301">        log.error(&quot;❌ Error: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L302">        return ResponseEntity.status(500)</span>
+<span class="nc" id="L303">            .body(Map.of(&quot;error&quot;, e.getMessage()));</span>
+    }
+}
+    
+    // ============================================
+    // HELPER METHODS
+    // ============================================
+    
+    private SignalDTO createRandomSignal(String vehicleId) {
+<span class="nc" id="L312">        SignalDTO signal = new SignalDTO();</span>
+<span class="nc" id="L313">        signal.setVehicleId(vehicleId);</span>
+<span class="nc" id="L314">        signal.setSignalType(&quot;NORMAL&quot;);</span>
+<span class="nc" id="L315">        signal.setTimestamp(LocalDateTime.now());</span>
+<span class="nc" id="L316">        signal.setLatitude(BigDecimal.valueOf(</span>
+<span class="nc" id="L317">            4.6097 + ThreadLocalRandom.current().nextDouble(-0.1, 0.1)</span>
+        ));
+<span class="nc" id="L319">        signal.setLongitude(BigDecimal.valueOf(</span>
+<span class="nc" id="L320">            -74.0817 + ThreadLocalRandom.current().nextDouble(-0.1, 0.1)</span>
+        ));
+<span class="nc" id="L322">        signal.setSpeed(BigDecimal.valueOf(</span>
+<span class="nc" id="L323">            ThreadLocalRandom.current().nextInt(40, 100)</span>
+        ));
+<span class="nc" id="L325">        signal.setEmergency(false);</span>
+<span class="nc" id="L326">        return signal;</span>
+    }
+    
+    private void sendNormalSignal(SignalDTO signal) {
+<span class="nc" id="L330">        rabbitTemplate.convertAndSend(</span>
+            RabbitMQConfig.EXCHANGE,
+            &quot;signal.normal&quot;,
+            signal,
+            message -&gt; {
+<span class="nc" id="L335">                message.getMessageProperties().setHeader(&quot;__TypeId__&quot;, &quot;signal&quot;);</span>
+<span class="nc" id="L336">                return message;</span>
+            }
+        );
+<span class="nc" id="L339">    }</span>
+    
+    private void sendEmergencySignal(SignalDTO signal) {
+<span class="nc" id="L342">        rabbitTemplate.convertAndSend(</span>
+            RabbitMQConfig.EXCHANGE,
+            &quot;signal.emergency&quot;,
+            signal,
+            message -&gt; {
+<span class="nc" id="L347">                message.getMessageProperties().setPriority(10);</span>
+<span class="nc" id="L348">                message.getMessageProperties().setHeader(&quot;__TypeId__&quot;, &quot;signal&quot;);</span>
+<span class="nc" id="L349">                return message;</span>
+            }
+        );
+<span class="nc" id="L352">    }</span>
+    
+    private void sleep(long ms) {
+        try {
+<span class="nc" id="L356">            Thread.sleep(ms);</span>
+<span class="nc" id="L357">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L358">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L359">        }</span>
+<span class="nc" id="L360">    }</span>
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

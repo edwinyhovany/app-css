@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignalPersistenceAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.adapter</a> &gt; <span class="el_source">SignalPersistenceAdapter.java</span></div><h1>SignalPersistenceAdapter.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.adapter;
+
+import com.ccs.monitoring.domain.model.Signal;
+import com.ccs.monitoring.domain.port.out.SignalRepository;
+import com.ccs.monitoring.domain.valueobject.Coordinates;
+import com.ccs.monitoring.domain.valueobject.SignalType;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import com.ccs.monitoring.infrastructure.adapter.outbound.persistence.entity.SignalEntity;
+import com.ccs.monitoring.infrastructure.adapter.outbound.persistence.repository.SignalJpaRepository;
+import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.Map;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+public class SignalPersistenceAdapter implements SignalRepository {
+    
+    private final SignalJpaRepository jpaRepository;
+    private final ObjectMapper objectMapper;
+    
+<span class="fc" id="L28">    public SignalPersistenceAdapter(SignalJpaRepository jpaRepository,ObjectMapper objectMapper) {</span>
+<span class="fc" id="L29">        this.jpaRepository = jpaRepository;</span>
+<span class="fc" id="L30">         this.objectMapper = objectMapper;</span>
+<span class="fc" id="L31">    }</span>
+    
+    @Override
+    public Signal save(Signal signal) {
+<span class="nc" id="L35">        SignalEntity entity = toEntity(signal);</span>
+<span class="nc" id="L36">        SignalEntity saved = jpaRepository.save(entity);</span>
+<span class="nc" id="L37">        return toDomain(saved);</span>
+    }
+    
+    @Override
+    public Optional&lt;Signal&gt; findById(Long id) {
+<span class="nc" id="L42">        return jpaRepository.findById(id)</span>
+<span class="nc" id="L43">            .map(this::toDomain);</span>
+    }
+    
+    @Override
+    public List&lt;Signal&gt; findByVehicleId(VehicleId vehicleId) {
+<span class="nc" id="L48">        return jpaRepository.findByVehicleId(vehicleId.getValue())</span>
+<span class="nc" id="L49">            .stream()</span>
+<span class="nc" id="L50">            .map(this::toDomain)</span>
+<span class="nc" id="L51">            .collect(Collectors.toList());</span>
+    }
+    
+    @Override
+    public List&lt;Signal&gt; findByVehicleIdAndTimestampBetween(
+            VehicleId vehicleId, 
+            LocalDateTime start, 
+            LocalDateTime end) {
+<span class="nc" id="L59">        return jpaRepository.findByVehicleIdAndTimestampBetween(</span>
+<span class="nc" id="L60">                vehicleId.getValue(), start, end)</span>
+<span class="nc" id="L61">            .stream()</span>
+<span class="nc" id="L62">            .map(this::toDomain)</span>
+<span class="nc" id="L63">            .collect(Collectors.toList());</span>
+    }
+    
+    private JsonNode toJsonNode(Map&lt;String, Object&gt; map) {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">    return map == null ? null : objectMapper.valueToTree(map);</span>
+}
+
+private Map&lt;String, Object&gt; toMap(JsonNode node) {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">    return node == null ? null :</span>
+<span class="nc" id="L72">           objectMapper.convertValue(</span>
+               node,
+<span class="nc" id="L74">               new TypeReference&lt;Map&lt;String, Object&gt;&gt;() {}</span>
+           );
+}    
+    // Mappers
+    private SignalEntity toEntity(Signal signal) {
+<span class="nc" id="L79">        SignalEntity entity = new SignalEntity();</span>
+<span class="nc" id="L80">        entity.setId(signal.getId());</span>
+<span class="nc" id="L81">        entity.setVehicleId(signal.getVehicleId().getValue());</span>
+<span class="nc" id="L82">        entity.setSignalType(signal.getSignalType().name());</span>
+<span class="nc" id="L83">        entity.setTimestamp(signal.getTimestamp());</span>
+        
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (signal.getCoordinates() != null) {</span>
+<span class="nc" id="L86">            entity.setLatitude(signal.getCoordinates().getLatitude());</span>
+<span class="nc" id="L87">            entity.setLongitude(signal.getCoordinates().getLongitude());</span>
+        }
+        
+<span class="nc" id="L90">        entity.setSpeed(signal.getSpeed());</span>
+<span class="nc" id="L91">        entity.setDirection(signal.getDirection());</span>
+<span class="nc" id="L92">        entity.setTemperature(signal.getTemperature());</span>
+<span class="nc" id="L93">        entity.setCargoStatus(signal.getCargoStatus());</span>
+<span class="nc" id="L94">        entity.setEmergency(signal.isEmergency());</span>
+      //  entity.setMetadata(signal.getMetadata());
+<span class="nc" id="L96">        entity.setMetadata(toJsonNode(signal.getMetadata()));</span>
+
+<span class="nc" id="L98">        return entity;</span>
+    }
+    
+    private Signal toDomain(SignalEntity entity) {
+<span class="nc" id="L102">        Coordinates coordinates = null;</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">        if (entity.getLatitude() != null &amp;&amp; entity.getLongitude() != null) {</span>
+<span class="nc" id="L104">            coordinates = new Coordinates(entity.getLatitude(), entity.getLongitude());</span>
+        }
+        
+<span class="nc" id="L107">        return Signal.builder()</span>
+<span class="nc" id="L108">            .id(entity.getId())</span>
+<span class="nc" id="L109">            .vehicleId(new VehicleId(entity.getVehicleId()))</span>
+<span class="nc" id="L110">            .signalType(SignalType.valueOf(entity.getSignalType()))</span>
+<span class="nc" id="L111">            .timestamp(entity.getTimestamp())</span>
+<span class="nc" id="L112">            .coordinates(coordinates)</span>
+<span class="nc" id="L113">            .speed(entity.getSpeed())</span>
+<span class="nc" id="L114">            .direction(entity.getDirection())</span>
+<span class="nc" id="L115">            .temperature(entity.getTemperature())</span>
+<span class="nc" id="L116">            .cargoStatus(entity.getCargoStatus())</span>
+<span class="nc" id="L117">            .emergency(entity.getEmergency())</span>
+           // .metadata(entity.getMetadata())
+<span class="nc" id="L119">            .metadata(toMap(entity.getMetadata()))</span>
+<span class="nc" id="L120">            .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

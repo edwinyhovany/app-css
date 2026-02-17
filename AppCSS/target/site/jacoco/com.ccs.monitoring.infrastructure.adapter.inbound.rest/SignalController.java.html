@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignalController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.adapter.inbound.rest</a> &gt; <span class="el_source">SignalController.java</span></div><h1>SignalController.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.adapter.inbound.rest;
+
+import com.ccs.monitoring.application.dto.SignalDTO;
+import com.ccs.monitoring.infrastructure.config.RabbitMQConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping(&quot;/api/v1/signals&quot;)
+public class SignalController {
+    
+<span class="fc" id="L18">    private static final Logger log = LoggerFactory.getLogger(SignalController.class);</span>
+    
+    private final RabbitTemplate rabbitTemplate;
+    
+<span class="fc" id="L22">    public SignalController(RabbitTemplate rabbitTemplate) {</span>
+<span class="fc" id="L23">        this.rabbitTemplate = rabbitTemplate;</span>
+<span class="fc" id="L24">    }</span>
+    
+    @PostMapping
+    public ResponseEntity&lt;String&gt; receiveSignal(@Valid @RequestBody SignalDTO signalDTO) {
+        try {
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">            String routingKey = signalDTO.isEmergency() ? &quot;signal.emergency&quot; : &quot;signal.normal&quot;;</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">            int priority = signalDTO.isEmergency() ? 10 : 5;</span>
+            
+            // ✅ SOLUCIÓN: Agregar __TypeId__ header manualmente
+<span class="fc" id="L33">            rabbitTemplate.convertAndSend(</span>
+                RabbitMQConfig.EXCHANGE,
+                routingKey,
+                signalDTO,
+                message -&gt; {
+<span class="fc" id="L38">                    message.getMessageProperties().setPriority(priority);</span>
+<span class="fc" id="L39">                    message.getMessageProperties().setHeader(&quot;__TypeId__&quot;, &quot;signal&quot;); // ← CLAVE</span>
+<span class="fc" id="L40">                    return message;</span>
+                }
+            );
+            
+<span class="fc" id="L44">            log.debug(&quot;Signal queued: vehicle={}, emergency={}&quot;, </span>
+<span class="fc" id="L45">                signalDTO.getVehicleId(), signalDTO.isEmergency());</span>
+            
+<span class="fc" id="L47">            return ResponseEntity.status(HttpStatus.ACCEPTED)</span>
+<span class="fc" id="L48">                .body(&quot;Signal queued for processing&quot;);</span>
+                
+<span class="nc" id="L50">        } catch (Exception e) {</span>
+<span class="nc" id="L51">            log.error(&quot;Error queueing signal: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L52">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L53">                .body(&quot;Error processing signal&quot;);</span>
+        }
+    }
+    
+    @PostMapping(&quot;/panic&quot;)
+    public ResponseEntity&lt;String&gt; panicButton(@RequestParam String vehicleId) {
+        try {
+<span class="fc" id="L60">            log.warn(&quot;🚨 PANIC BUTTON pressed for vehicle: {}&quot;, vehicleId);</span>
+            
+<span class="fc" id="L62">            SignalDTO emergencySignal = new SignalDTO();</span>
+<span class="fc" id="L63">            emergencySignal.setVehicleId(vehicleId);</span>
+<span class="fc" id="L64">            emergencySignal.setEmergency(true);</span>
+<span class="fc" id="L65">            emergencySignal.setSignalType(&quot;PANIC_BUTTON&quot;);</span>
+<span class="fc" id="L66">            emergencySignal.setTimestamp(java.time.LocalDateTime.now());</span>
+            
+            // ✅ SOLUCIÓN: Agregar __TypeId__ header
+<span class="fc" id="L69">            rabbitTemplate.convertAndSend(</span>
+                RabbitMQConfig.EXCHANGE,
+                &quot;signal.emergency&quot;,
+                emergencySignal,
+                message -&gt; {
+<span class="fc" id="L74">                    message.getMessageProperties().setPriority(10);</span>
+<span class="fc" id="L75">                    message.getMessageProperties().setHeader(&quot;__TypeId__&quot;, &quot;signal&quot;); // ← CLAVE</span>
+<span class="fc" id="L76">                    return message;</span>
+                }
+            );
+            
+<span class="fc" id="L80">            return ResponseEntity.status(HttpStatus.ACCEPTED)</span>
+<span class="fc" id="L81">                .body(&quot;Emergency signal dispatched&quot;);</span>
+                
+<span class="nc" id="L83">        } catch (Exception e) {</span>
+<span class="nc" id="L84">            log.error(&quot;Error processing panic button: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L85">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L86">                .body(&quot;Error processing emergency&quot;);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

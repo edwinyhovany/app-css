@@ -6,6 +6,7 @@ import com.ccs.monitoring.domain.valueobject.VehicleId;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Map;
 
 public class Signal {
     private final Long id;
@@ -18,7 +19,7 @@ public class Signal {
     private final BigDecimal temperature;
     private final String cargoStatus;
     private final boolean emergency;
-    private final String metadata;
+    private Map<String, Object> metadata;
     
     private Signal(SignalBuilder builder) {
         this.id = builder.id;
@@ -58,8 +59,9 @@ public class Signal {
     public BigDecimal getDirection() { return direction; }
     public BigDecimal getTemperature() { return temperature; }
     public String getCargoStatus() { return cargoStatus; }
-    public String getMetadata() { return metadata; }
-    
+    //public String getMetadata() { return metadata; }
+    public Map<String, Object> getMetadata() {  return metadata;
+}
     public static SignalBuilder builder() {
         return new SignalBuilder();
     }
@@ -75,7 +77,8 @@ public class Signal {
         private BigDecimal temperature;
         private String cargoStatus;
         private boolean emergency;
-        private String metadata;
+        //private String metadata;
+        private Map<String, Object> metadata;
         
         public SignalBuilder id(Long id) {
             this.id = id;
@@ -127,7 +130,8 @@ public class Signal {
             return this;
         }
         
-        public SignalBuilder metadata(String metadata) {
+     
+        public SignalBuilder metadata(Map<String, Object> metadata) {
             this.metadata = metadata;
             return this;
         }

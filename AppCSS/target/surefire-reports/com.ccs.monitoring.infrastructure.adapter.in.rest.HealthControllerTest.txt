@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.ccs.monitoring.infrastructure.adapter.in.rest.HealthControllerTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.805 s -- in com.ccs.monitoring.infrastructure.adapter.in.rest.HealthControllerTest

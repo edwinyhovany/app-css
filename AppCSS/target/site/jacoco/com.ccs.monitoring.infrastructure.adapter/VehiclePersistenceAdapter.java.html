@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VehiclePersistenceAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.adapter</a> &gt; <span class="el_source">VehiclePersistenceAdapter.java</span></div><h1>VehiclePersistenceAdapter.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.adapter;
+
+import com.ccs.monitoring.domain.model.Vehicle;
+import com.ccs.monitoring.domain.port.out.VehicleRepository;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import com.ccs.monitoring.infrastructure.adapter.outbound.persistence.entity.VehicleEntity;
+import com.ccs.monitoring.infrastructure.adapter.outbound.persistence.repository.VehicleJpaRepository;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@Component
+public class VehiclePersistenceAdapter implements VehicleRepository {
+    
+    private final VehicleJpaRepository jpaRepository;
+    
+<span class="fc" id="L17">    public VehiclePersistenceAdapter(VehicleJpaRepository jpaRepository) {</span>
+<span class="fc" id="L18">        this.jpaRepository = jpaRepository;</span>
+<span class="fc" id="L19">    }</span>
+    
+    @Override
+    public Vehicle save(Vehicle vehicle) {
+<span class="nc" id="L23">        VehicleEntity entity = toEntity(vehicle);</span>
+<span class="nc" id="L24">        VehicleEntity saved = jpaRepository.save(entity);</span>
+<span class="nc" id="L25">        return toDomain(saved);</span>
+    }
+    
+    @Override
+    public Optional&lt;Vehicle&gt; findById(VehicleId vehicleId) {
+<span class="nc" id="L30">        return jpaRepository.findById(vehicleId.getValue())</span>
+<span class="nc" id="L31">            .map(this::toDomain);</span>
+    }
+    
+    @Override
+    public boolean existsById(VehicleId vehicleId) {
+<span class="nc" id="L36">        return jpaRepository.existsById(vehicleId.getValue());</span>
+    }
+    
+    // Mappers
+    private VehicleEntity toEntity(Vehicle vehicle) {
+<span class="nc" id="L41">        VehicleEntity entity = new VehicleEntity();</span>
+<span class="nc" id="L42">        entity.setId(vehicle.getVehicleId().getValue());</span>
+<span class="nc" id="L43">        entity.setLicensePlate(vehicle.getLicensePlate());</span>
+<span class="nc" id="L44">        entity.setVehicleType(vehicle.getType().name());</span>
+<span class="nc" id="L45">        entity.setOwnerId(vehicle.getOwnerId());</span>
+<span class="nc" id="L46">        entity.setStatus(vehicle.getStatus().name());</span>
+<span class="nc" id="L47">        entity.setLastSignalTime(vehicle.getLastSignalTime());</span>
+<span class="nc" id="L48">        return entity;</span>
+    }
+    
+    private Vehicle toDomain(VehicleEntity entity) {
+<span class="nc" id="L52">        return new Vehicle(</span>
+<span class="nc" id="L53">            new VehicleId(entity.getId()),</span>
+<span class="nc" id="L54">            entity.getLicensePlate(),</span>
+<span class="nc" id="L55">            Vehicle.VehicleType.valueOf(entity.getVehicleType()),</span>
+<span class="nc" id="L56">            entity.getOwnerId()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

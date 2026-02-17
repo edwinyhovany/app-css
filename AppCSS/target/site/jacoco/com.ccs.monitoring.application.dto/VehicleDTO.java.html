@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VehicleDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.application.dto</a> &gt; <span class="el_source">VehicleDTO.java</span></div><h1>VehicleDTO.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.application.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+
+public class VehicleDTO {
+    
+    private String id;
+    
+    @NotBlank(message = &quot;License plate is required&quot;)
+    private String licensePlate;
+    
+    @NotNull(message = &quot;Vehicle type is required&quot;)
+    private String vehicleType;
+    
+    @NotBlank(message = &quot;Owner ID is required&quot;)
+    private String ownerId;
+    
+    private String status;
+    private LocalDateTime lastSignalTime;
+    private LocalDateTime createdAt;
+    
+    // Constructors
+<span class="fc" id="L25">    public VehicleDTO() {}</span>
+    
+    // Getters and Setters
+<span class="fc" id="L28">    public String getId() { return id; }</span>
+<span class="fc" id="L29">    public void setId(String id) { this.id = id; }</span>
+    
+<span class="fc" id="L31">    public String getLicensePlate() { return licensePlate; }</span>
+<span class="fc" id="L32">    public void setLicensePlate(String licensePlate) { this.licensePlate = licensePlate; }</span>
+    
+<span class="fc" id="L34">    public String getVehicleType() { return vehicleType; }</span>
+<span class="fc" id="L35">    public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }</span>
+    
+<span class="fc" id="L37">    public String getOwnerId() { return ownerId; }</span>
+<span class="fc" id="L38">    public void setOwnerId(String ownerId) { this.ownerId = ownerId; }</span>
+    
+<span class="nc" id="L40">    public String getStatus() { return status; }</span>
+<span class="nc" id="L41">    public void setStatus(String status) { this.status = status; }</span>
+    
+<span class="nc" id="L43">    public LocalDateTime getLastSignalTime() { return lastSignalTime; }</span>
+<span class="nc" id="L44">    public void setLastSignalTime(LocalDateTime lastSignalTime) { this.lastSignalTime = lastSignalTime; }</span>
+    
+<span class="nc" id="L46">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="nc" id="L47">    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

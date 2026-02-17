@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlertPersistenceAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.adapter</a> &gt; <span class="el_source">AlertPersistenceAdapter.java</span></div><h1>AlertPersistenceAdapter.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.adapter;
+
+import com.ccs.monitoring.domain.model.Alert;
+import com.ccs.monitoring.domain.port.out.AlertRepository;
+import com.ccs.monitoring.domain.valueobject.AlertLevel;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import com.ccs.monitoring.infrastructure.adapter.outbound.persistence.entity.AlertEntity;
+
+import com.ccs.monitoring.infrastructure.adapter.outbound.persistence.repository.AlertJpaRepository;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+public class AlertPersistenceAdapter implements AlertRepository {
+    
+    private final AlertJpaRepository jpaRepository;
+    
+<span class="fc" id="L20">    public AlertPersistenceAdapter(AlertJpaRepository jpaRepository) {</span>
+<span class="fc" id="L21">        this.jpaRepository = jpaRepository;</span>
+<span class="fc" id="L22">    }</span>
+    
+    @Override
+    public Alert save(Alert alert) {
+<span class="nc" id="L26">        AlertEntity entity = toEntity(alert);</span>
+<span class="nc" id="L27">        AlertEntity saved = jpaRepository.save(entity);</span>
+<span class="nc" id="L28">        return toDomain(saved);</span>
+    }
+    
+    @Override
+    public List&lt;Alert&gt; findByVehicleId(VehicleId vehicleId) {
+<span class="nc" id="L33">        return jpaRepository.findByVehicleId(vehicleId.getValue())</span>
+<span class="nc" id="L34">            .stream()</span>
+<span class="nc" id="L35">            .map(this::toDomain)</span>
+<span class="nc" id="L36">            .collect(Collectors.toList());</span>
+    }
+    
+    @Override
+    public List&lt;Alert&gt; findUnresolvedAlerts() {
+<span class="nc" id="L41">        return jpaRepository.findByResolvedFalseOrderByCreatedAtDesc()</span>
+<span class="nc" id="L42">            .stream()</span>
+<span class="nc" id="L43">            .map(this::toDomain)</span>
+<span class="nc" id="L44">            .collect(Collectors.toList());</span>
+    }
+    
+    // Mappers
+    private AlertEntity toEntity(Alert alert) {
+<span class="nc" id="L49">        AlertEntity entity = new AlertEntity();</span>
+<span class="nc" id="L50">        entity.setId(alert.getId());</span>
+<span class="nc" id="L51">        entity.setVehicleId(alert.getVehicleId().getValue());</span>
+<span class="nc" id="L52">        entity.setSignalId(alert.getSignalId());</span>
+<span class="nc" id="L53">        entity.setRuleId(alert.getRuleId());</span>
+<span class="nc" id="L54">        entity.setRuleName(alert.getRuleName());</span>
+<span class="nc" id="L55">        entity.setLevel(alert.getLevel().name());</span>
+<span class="nc" id="L56">        entity.setMessage(alert.getMessage());</span>
+<span class="nc" id="L57">        entity.setResolved(alert.isResolved());</span>
+<span class="nc" id="L58">        entity.setResolvedAt(alert.getResolvedAt());</span>
+<span class="nc" id="L59">        return entity;</span>
+    }
+    
+    private Alert toDomain(AlertEntity entity) {
+<span class="nc" id="L63">        return Alert.builder()</span>
+<span class="nc" id="L64">            .id(entity.getId())</span>
+<span class="nc" id="L65">            .vehicleId(new VehicleId(entity.getVehicleId()))</span>
+<span class="nc" id="L66">            .signalId(entity.getSignalId())</span>
+<span class="nc" id="L67">            .ruleId(entity.getRuleId())</span>
+<span class="nc" id="L68">            .ruleName(entity.getRuleName())</span>
+<span class="nc" id="L69">            .level(AlertLevel.valueOf(entity.getLevel()))</span>
+<span class="nc" id="L70">            .message(entity.getMessage())</span>
+<span class="nc" id="L71">            .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

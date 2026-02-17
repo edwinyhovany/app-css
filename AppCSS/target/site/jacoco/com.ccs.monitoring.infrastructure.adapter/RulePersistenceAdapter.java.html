@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RulePersistenceAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.adapter</a> &gt; <span class="el_source">RulePersistenceAdapter.java</span></div><h1>RulePersistenceAdapter.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.adapter;
+
+import com.ccs.monitoring.domain.model.Rule;
+import com.ccs.monitoring.domain.port.out.RuleRepository;
+import com.ccs.monitoring.domain.valueobject.RuleCondition;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import com.ccs.monitoring.infrastructure.adapter.outbound.persistence.entity.RuleEntity;
+import com.ccs.monitoring.infrastructure.adapter.outbound.persistence.repository.RuleJpaRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+public class RulePersistenceAdapter implements RuleRepository {
+    
+<span class="fc" id="L23">    private static final Logger log = LoggerFactory.getLogger(RulePersistenceAdapter.class);</span>
+    private final RuleJpaRepository jpaRepository;
+    private final ObjectMapper objectMapper;
+    
+<span class="fc" id="L27">    public RulePersistenceAdapter(RuleJpaRepository jpaRepository, ObjectMapper objectMapper) {</span>
+<span class="fc" id="L28">        this.jpaRepository = jpaRepository;</span>
+<span class="fc" id="L29">        this.objectMapper = objectMapper;</span>
+<span class="fc" id="L30">    }</span>
+    
+    @Override
+    public Rule save(Rule rule) {
+<span class="nc" id="L34">        RuleEntity entity = toEntity(rule);</span>
+<span class="nc" id="L35">        RuleEntity saved = jpaRepository.save(entity);</span>
+<span class="nc" id="L36">        return toDomain(saved);</span>
+    }
+    
+    @Override
+    public Optional&lt;Rule&gt; findById(Long id) {
+<span class="nc" id="L41">        return jpaRepository.findById(id)</span>
+<span class="nc" id="L42">            .map(this::toDomain);</span>
+    }
+    
+    @Override
+    public List&lt;Rule&gt; findActiveRulesByVehicleId(VehicleId vehicleId) {
+<span class="nc" id="L47">        return jpaRepository.findByVehicleIdAndActiveTrue(vehicleId.getValue())</span>
+<span class="nc" id="L48">            .stream()</span>
+<span class="nc" id="L49">            .map(this::toDomain)</span>
+<span class="nc" id="L50">            .collect(Collectors.toList());</span>
+    }
+    
+    @Override
+    public void deleteById(Long id) {
+<span class="nc" id="L55">        jpaRepository.deleteById(id);</span>
+<span class="nc" id="L56">    }</span>
+    
+    // Mappers
+    private RuleEntity toEntity(Rule rule) {
+<span class="nc" id="L60">        RuleEntity entity = new RuleEntity();</span>
+<span class="nc" id="L61">        entity.setId(rule.getId());</span>
+<span class="nc" id="L62">        entity.setVehicleId(rule.getVehicleId().getValue());</span>
+<span class="nc" id="L63">        entity.setName(rule.getName());</span>
+<span class="nc" id="L64">        entity.setConditionType(rule.getCondition().getType().name());</span>
+<span class="nc" id="L65">        entity.setConditionParameter(rule.getCondition().getParameter());</span>
+<span class="nc" id="L66">        entity.setConditionOperator(rule.getCondition().getOperator());</span>
+<span class="nc" id="L67">        entity.setConditionValue(rule.getCondition().getValue());</span>
+<span class="nc" id="L68">        entity.setActive(rule.isActive());</span>
+        
+        // Convertir actions a JSON
+        try {
+<span class="nc" id="L72">            List&lt;String&gt; actions = rule.getActions().stream()</span>
+<span class="nc" id="L73">                .map(Enum::name)</span>
+<span class="nc" id="L74">                .collect(Collectors.toList());</span>
+<span class="nc" id="L75">            entity.setActions(objectMapper.writeValueAsString(actions));</span>
+<span class="nc" id="L76">        } catch (JsonProcessingException e) {</span>
+<span class="nc" id="L77">            log.error(&quot;Error serializing actions&quot;, e);</span>
+<span class="nc" id="L78">            entity.setActions(&quot;[]&quot;);</span>
+<span class="nc" id="L79">        }</span>
+        
+<span class="nc" id="L81">        return entity;</span>
+    }
+    
+    private Rule toDomain(RuleEntity entity) {
+<span class="nc" id="L85">        RuleCondition condition = new RuleCondition(</span>
+<span class="nc" id="L86">            RuleCondition.ConditionType.valueOf(entity.getConditionType()),</span>
+<span class="nc" id="L87">            entity.getConditionParameter(),</span>
+<span class="nc" id="L88">            entity.getConditionOperator(),</span>
+<span class="nc" id="L89">            entity.getConditionValue()</span>
+        );
+        
+<span class="nc" id="L92">        Rule rule = new Rule(</span>
+<span class="nc" id="L93">            entity.getId(),</span>
+<span class="nc" id="L94">            new VehicleId(entity.getVehicleId()),</span>
+<span class="nc" id="L95">            entity.getName(),</span>
+            condition
+        );
+        
+        // Parsear actions desde JSON
+        try {
+<span class="nc" id="L101">            String[] actions = objectMapper.readValue(entity.getActions(), String[].class);</span>
+<span class="nc" id="L102">            Arrays.stream(actions).forEach(action -&gt; </span>
+<span class="nc" id="L103">                rule.addAction(Rule.RuleAction.valueOf(action))</span>
+            );
+<span class="nc" id="L105">        } catch (JsonProcessingException e) {</span>
+<span class="nc" id="L106">            log.error(&quot;Error deserializing actions&quot;, e);</span>
+<span class="nc" id="L107">        }</span>
+        
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (!entity.getActive()) {</span>
+<span class="nc" id="L110">            rule.deactivate();</span>
+        }
+        
+<span class="nc" id="L113">        return rule;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

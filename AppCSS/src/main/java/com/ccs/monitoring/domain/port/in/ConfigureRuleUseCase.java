@@ -1,4 +1,6 @@
+package com.ccs.monitoring.domain.port.in; 
 import com.ccs.monitoring.application.dto.RuleDTO;
+
 
 public interface ConfigureRuleUseCase {
     RuleDTO createRule(RuleDTO ruleDTO);

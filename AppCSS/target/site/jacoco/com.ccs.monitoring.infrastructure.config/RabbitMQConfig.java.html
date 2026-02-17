@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RabbitMQConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.config</a> &gt; <span class="el_source">RabbitMQConfig.java</span></div><h1>RabbitMQConfig.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Configuración de RabbitMQ con serialización JSON
+ * 
+ * DECISIÓN ARQUITECTÓNICA:
+ * - Se usa JSON en lugar de Java Serialization por:
+ *   1. Interoperabilidad: Otros lenguajes pueden consumir mensajes
+ *   2. Seguridad: Sin riesgos de deserialización arbitraria
+ *   3. Portabilidad: No depende de versiones de clases Java
+ *   4. Observabilidad: Mensajes legibles en RabbitMQ Management UI
+ *   5. Estándar: JSON es el estándar de facto en sistemas distribuidos
+ */
+@Configuration
+<span class="fc" id="L29">public class RabbitMQConfig {</span>
+    
+    public static final String EMERGENCY_QUEUE = &quot;ccs.emergency.queue&quot;;
+    public static final String SIGNALS_QUEUE = &quot;ccs.signals.queue&quot;;
+    public static final String NOTIFICATIONS_QUEUE = &quot;ccs.notifications.queue&quot;;
+    public static final String EXCHANGE = &quot;ccs.exchange&quot;;
+    
+   /* // ==========================================
+    // OBJECT MAPPER
+    // ==========================================
+    
+    @Bean
+    public ObjectMapper rabbitObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        return mapper;
+    }
+    
+    // ==========================================
+    // CLASS MAPPER - Type Mapping
+    // ==========================================
+    
+    /**
+     * ClassMapper que mapea nombres simples a clases Java
+     * 
+     * Esto permite:
+     * - Enviar &quot;__TypeId__: signal&quot; en el header
+     * - Deserializar automáticamente como SignalDTO
+     * - No depender del fully qualified class name
+     */
+   /* @Bean
+    public DefaultClassMapper classMapper() {
+        DefaultClassMapper classMapper = new DefaultClassMapper();
+        
+        // Mapeo: nombre simple → clase Java
+        Map&lt;String, Class&lt;?&gt;&gt; idClassMapping = new HashMap&lt;&gt;();
+        idClassMapping.put(&quot;signal&quot;, SignalDTO.class);
+        // Agregar más DTOs si es necesario
+        // idClassMapping.put(&quot;vehicle&quot;, VehicleDTO.class);
+        // idClassMapping.put(&quot;rule&quot;, RuleDTO.class);
+        
+        classMapper.setIdClassMapping(idClassMapping);
+        
+        return classMapper;
+    }*/
+    // ==========================================
+    // MESSAGE CONVERTER - JSON
+    // ==========================================
+    
+    /**
+     * Converter para serializar/deserializar mensajes como JSON
+     * 
+     * Esto permite:
+     * - DTOs se convierten automáticamente a JSON
+     * - No requiere implements Serializable
+     * - Consumers en otros lenguajes pueden leer los mensajes
+     * - Mensajes son lejibles y entendibles en RabbitMQ UI
+     */
+  
+ 
+   @Bean
+    public MessageConverter jsonMessageConverter(ObjectMapper objectMapper) {
+<span class="fc" id="L91">        return new Jackson2JsonMessageConverter(objectMapper);</span>
+    }
+       /**
+     * RabbitTemplate configurado con JSON converter
+     * 
+     * CRÍTICO: Este bean configura el template que usa el Controller
+     * para enviar mensajes. Sin esto, usaría SimpleMessageConverter
+     * que requiere Serializable.
+     */
+    
+    @Bean
+    @Primary
+    public RabbitTemplate rabbitTemplate(
+            ConnectionFactory connectionFactory,
+            MessageConverter messageConverter) {
+
+<span class="fc" id="L107">        RabbitTemplate template = new RabbitTemplate(connectionFactory);</span>
+<span class="fc" id="L108">        template.setMessageConverter(messageConverter);</span>
+<span class="fc" id="L109">        template.setMandatory(true);</span>
+
+<span class="fc" id="L111">        template.setReturnsCallback(returned -&gt; {</span>
+<span class="nc" id="L112">            System.err.println(&quot;Message returned: &quot; +</span>
+<span class="nc" id="L113">                new String(returned.getMessage().getBody()));</span>
+<span class="nc" id="L114">        });</span>
+
+<span class="fc" id="L116">        return template;</span>
+    }
+    
+    // ==========================================
+    // QUEUES - Con prioridades
+    // ==========================================
+    
+    /**
+     * Cola de EMERGENCIAS
+     * - Prioridad máxima (x-max-priority: 10)
+     * - TTL corto (60s) para no retener emergencias antiguas
+     */
+    @Bean
+    public Queue emergencyQueue() {
+<span class="fc" id="L130">        Map&lt;String, Object&gt; args = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L131">        args.put(&quot;x-max-priority&quot;, 10);</span>
+<span class="fc" id="L132">        args.put(&quot;x-message-ttl&quot;, 60000); // 60 segundos</span>
+<span class="fc" id="L133">        return new Queue(EMERGENCY_QUEUE, true, false, false, args);</span>
+    }
+    
+    /**
+     * Cola de señales normales
+     * - Sin prioridad especial
+     * - Durable (sobrevive a restart de RabbitMQ)
+     */
+    @Bean
+    public Queue signalsQueue() {
+<span class="fc" id="L143">        return new Queue(SIGNALS_QUEUE, true);</span>
+    }
+    
+    /**
+     * Cola de notificaciones
+     * - Para acciones asíncronas (SMS, Email, etc.)
+     */
+    @Bean
+    public Queue notificationsQueue() {
+<span class="fc" id="L152">        return new Queue(NOTIFICATIONS_QUEUE, true);</span>
+    }
+    
+    // ==========================================
+    // EXCHANGE &amp; BINDINGS
+    // ==========================================
+    
+    @Bean
+    public TopicExchange exchange() {
+<span class="fc" id="L161">        return new TopicExchange(EXCHANGE, true, false);</span>
+    }
+    
+    @Bean
+    public Binding emergencyBinding() {
+<span class="fc" id="L166">        return BindingBuilder</span>
+<span class="fc" id="L167">            .bind(emergencyQueue())</span>
+<span class="fc" id="L168">            .to(exchange())</span>
+<span class="fc" id="L169">            .with(&quot;signal.emergency&quot;);</span>
+    }
+    
+    @Bean
+    public Binding signalsBinding() {
+<span class="fc" id="L174">        return BindingBuilder</span>
+<span class="fc" id="L175">            .bind(signalsQueue())</span>
+<span class="fc" id="L176">            .to(exchange())</span>
+<span class="fc" id="L177">            .with(&quot;signal.normal&quot;);</span>
+    }
+    
+    @Bean
+    public Binding notificationsBinding() {
+<span class="fc" id="L182">        return BindingBuilder</span>
+<span class="fc" id="L183">            .bind(notificationsQueue())</span>
+<span class="fc" id="L184">            .to(exchange())</span>
+<span class="fc" id="L185">            .with(&quot;notification.#&quot;);</span>
+    }
+    
+    // ==========================================
+    // LISTENER FACTORIES - Consumers
+    // ==========================================
+    
+    /**
+     * Factory para EMERGENCIAS
+     * - 5 consumers concurrentes (procesamiento rápido)
+     * - Prefetch: 1 (cada worker procesa 1 mensaje a la vez)
+     * - JSON converter para deserializar mensajes
+     */
+
+    @Bean
+public SimpleRabbitListenerContainerFactory emergencyListenerFactory(
+        ConnectionFactory connectionFactory,
+        MessageConverter messageConverter) {
+
+<span class="fc" id="L204">    SimpleRabbitListenerContainerFactory factory =</span>
+            new SimpleRabbitListenerContainerFactory();
+
+<span class="fc" id="L207">    factory.setConnectionFactory(connectionFactory);</span>
+<span class="fc" id="L208">    factory.setConcurrentConsumers(5);</span>
+<span class="fc" id="L209">    factory.setMaxConcurrentConsumers(10);</span>
+<span class="fc" id="L210">    factory.setPrefetchCount(1);</span>
+
+<span class="fc" id="L212">    factory.setMessageConverter(messageConverter); //  Json correcto</span>
+
+<span class="fc" id="L214">    return factory;</span>
+}
+    /**
+     * Factory para señales NORMALES
+     * - 3-8 consumers concurrentes (throughput alto)
+     * - Prefetch: 10 (batch processing)
+     * - JSON converter
+     */
+    @Bean
+    public SimpleRabbitListenerContainerFactory signalsListenerFactory(
+            ConnectionFactory connectionFactory,  
+            MessageConverter messageConverter) {
+  
+<span class="fc" id="L227">    SimpleRabbitListenerContainerFactory factory =</span>
+            new SimpleRabbitListenerContainerFactory();
+<span class="fc" id="L229">        factory.setConnectionFactory(connectionFactory);</span>
+<span class="fc" id="L230">        factory.setConcurrentConsumers(3);</span>
+<span class="fc" id="L231">        factory.setMaxConcurrentConsumers(8);</span>
+<span class="fc" id="L232">        factory.setPrefetchCount(10);</span>
+<span class="fc" id="L233">        factory.setMessageConverter(messageConverter); //  Json correcto</span>
+<span class="fc" id="L234">        return factory;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

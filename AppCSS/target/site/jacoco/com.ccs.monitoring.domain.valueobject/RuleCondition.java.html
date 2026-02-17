@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RuleCondition.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.domain.valueobject</a> &gt; <span class="el_source">RuleCondition.java</span></div><h1>RuleCondition.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.domain.valueobject;
+
+import com.ccs.monitoring.domain.model.Signal;
+import java.math.BigDecimal;
+import java.util.Objects;
+
+public class RuleCondition {
+    private final ConditionType type;
+    private final String parameter;
+    private final String operator;
+    private final String value;
+    
+<span class="fc" id="L13">    public RuleCondition(ConditionType type, String parameter, String operator, String value) {</span>
+<span class="fc" id="L14">        this.type = Objects.requireNonNull(type, &quot;Condition type cannot be null&quot;);</span>
+<span class="fc" id="L15">        this.parameter = parameter;</span>
+<span class="fc" id="L16">        this.operator = operator;</span>
+<span class="fc" id="L17">        this.value = value;</span>
+<span class="fc" id="L18">    }</span>
+    
+    public boolean evaluate(Signal signal) {
+<span class="pc bpc" id="L21" title="1 of 5 branches missed.">        switch (type) {</span>
+            case THRESHOLD:
+<span class="fc" id="L23">                return evaluateThreshold(signal);</span>
+            case TIME_BASED:
+<span class="fc" id="L25">                return evaluateTimeBased(signal);</span>
+            case GEOFENCE:
+<span class="fc" id="L27">                return evaluateGeofence(signal);</span>
+            case EMERGENCY:
+<span class="fc" id="L29">                return signal.isEmergency();</span>
+            default:
+<span class="nc" id="L31">                return false;</span>
+        }
+    }
+    
+    private boolean evaluateThreshold(Signal signal) {
+        
+<span class="pc bpc" id="L37" title="2 of 6 branches missed.">        if (&quot;speed&quot;.equals(parameter) &amp;&amp; signal.getSpeed() != null &amp;&amp; value != null) {</span>
+            try {
+<span class="fc" id="L39">                BigDecimal signalSpeed = signal.getSpeed();</span>
+<span class="fc" id="L40">                BigDecimal thresholdValue = new BigDecimal(value);</span>
+                
+<span class="fc bfc" id="L42" title="All 2 branches covered.">                if (operator == null) {</span>
+<span class="fc" id="L43">                    return false;</span>
+                }
+                
+<span class="pc bpc" id="L46" title="2 of 6 branches missed.">                switch (operator) {</span>
+                    case &quot;&gt;&quot;: 
+<span class="fc bfc" id="L48" title="All 2 branches covered.">                        return signalSpeed.compareTo(thresholdValue) &gt; 0;</span>
+                    case &quot;&lt;&quot;: 
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">                        return signalSpeed.compareTo(thresholdValue) &lt; 0;</span>
+                    case &quot;&gt;=&quot;: 
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                        return signalSpeed.compareTo(thresholdValue) &gt;= 0;</span>
+                    case &quot;&lt;=&quot;: 
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                        return signalSpeed.compareTo(thresholdValue) &lt;= 0;</span>
+                    case &quot;=&quot;: 
+                    case &quot;==&quot;:
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">                        return signalSpeed.compareTo(thresholdValue) == 0;</span>
+                    default: 
+<span class="fc" id="L59">                        return false;</span>
+                }
+<span class="fc" id="L61">            } catch (NumberFormatException e) {</span>
+<span class="fc" id="L62">                return false;</span>
+            }
+        }
+        
+<span class="pc bpc" id="L66" title="2 of 6 branches missed.">        if (&quot;temperature&quot;.equals(parameter) &amp;&amp; signal.getTemperature() != null &amp;&amp; value != null) {</span>
+            try {
+<span class="fc" id="L68">                BigDecimal signalTemp = signal.getTemperature();</span>
+<span class="fc" id="L69">                BigDecimal thresholdValue = new BigDecimal(value);</span>
+                
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">                if (operator == null) {</span>
+<span class="nc" id="L72">                    return false;</span>
+                }
+                
+<span class="pc bpc" id="L75" title="1 of 5 branches missed.">                switch (operator) {</span>
+                    case &quot;&gt;&quot;: 
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">                        return signalTemp.compareTo(thresholdValue) &gt; 0;</span>
+                    case &quot;&lt;&quot;: 
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">                        return signalTemp.compareTo(thresholdValue) &lt; 0;</span>
+                    case &quot;&gt;=&quot;: 
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                        return signalTemp.compareTo(thresholdValue) &gt;= 0;</span>
+                    case &quot;&lt;=&quot;: 
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">                        return signalTemp.compareTo(thresholdValue) &lt;= 0;</span>
+                    default: 
+<span class="nc" id="L85">                        return false;</span>
+                }
+<span class="nc" id="L87">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L88">                return false;</span>
+            }
+        }
+        
+<span class="fc" id="L92">        return false;</span>
+    }
+    
+    private boolean evaluateTimeBased(Signal signal) {
+        // Implementación simple - puede expandirse
+<span class="fc" id="L97">        return false;</span>
+    }
+    
+    private boolean evaluateGeofence(Signal signal) {
+        // Implementación simple - puede expandirse
+<span class="fc" id="L102">        return false;</span>
+    }
+    
+    // Getters
+<span class="fc" id="L106">    public ConditionType getType() { return type; }</span>
+<span class="fc" id="L107">    public String getParameter() { return parameter; }</span>
+<span class="fc" id="L108">    public String getOperator() { return operator; }</span>
+<span class="fc" id="L109">    public String getValue() { return value; }</span>
+    
+<span class="fc" id="L111">    public enum ConditionType {</span>
+<span class="fc" id="L112">        THRESHOLD,</span>
+<span class="fc" id="L113">        TIME_BASED,</span>
+<span class="fc" id="L114">        GEOFENCE,</span>
+<span class="fc" id="L115">        EMERGENCY</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
