@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class SignalDTO {
     
@@ -38,8 +39,7 @@ public class SignalDTO {
     private BigDecimal temperature;
     private String cargoStatus;
     private boolean emergency;
-    private String metadata;
-    
+    private Map<String, Object> metadata;
     // Constructors
     public SignalDTO() {}
     
@@ -77,6 +77,6 @@ public class SignalDTO {
     public boolean isEmergency() { return emergency; }
     public void setEmergency(boolean emergency) { this.emergency = emergency; }
     
-    public String getMetadata() { return metadata; }
-    public void setMetadata(String metadata) { this.metadata = metadata; }
+    public Map<String, Object> getMetadata() {    return metadata;}
+    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata;}
 }

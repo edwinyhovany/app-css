@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigureRuleService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.application.service</a> &gt; <span class="el_source">ConfigureRuleService.java</span></div><h1>ConfigureRuleService.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.application.service;
+
+import com.ccs.monitoring.application.dto.RuleDTO;
+import com.ccs.monitoring.application.mapper.RuleMapper;
+import com.ccs.monitoring.domain.model.Rule;
+import com.ccs.monitoring.domain.port.in.ConfigureRuleUseCase;
+import com.ccs.monitoring.domain.port.out.CacheService;
+import com.ccs.monitoring.domain.port.out.RuleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class ConfigureRuleService implements ConfigureRuleUseCase {
+    
+<span class="fc" id="L18">    private static final Logger log = LoggerFactory.getLogger(ConfigureRuleService.class);</span>
+    
+    private final RuleRepository ruleRepository;
+    private final CacheService cacheService;
+    private final RuleMapper ruleMapper;
+    
+    public ConfigureRuleService(
+            RuleRepository ruleRepository,
+            CacheService cacheService,
+<span class="fc" id="L27">            RuleMapper ruleMapper) {</span>
+<span class="fc" id="L28">        this.ruleRepository = ruleRepository;</span>
+<span class="fc" id="L29">        this.cacheService = cacheService;</span>
+<span class="fc" id="L30">        this.ruleMapper = ruleMapper;</span>
+<span class="fc" id="L31">    }</span>
+    
+    @Override
+    public RuleDTO createRule(RuleDTO ruleDTO) {
+<span class="nc" id="L35">        log.info(&quot;Creating rule: {} for vehicle {}&quot;, ruleDTO.getName(), ruleDTO.getVehicleId());</span>
+        
+<span class="nc" id="L37">        Rule rule = ruleMapper.toDomain(ruleDTO);</span>
+<span class="nc" id="L38">        Rule saved = ruleRepository.save(rule);</span>
+        
+        // Invalidar cache para que se recarguen las reglas
+<span class="nc" id="L41">        cacheService.invalidate(rule.getVehicleId());</span>
+        
+<span class="nc" id="L43">        log.info(&quot;Rule created successfully: ID={}&quot;, saved.getId());</span>
+        
+<span class="nc" id="L45">        return ruleMapper.toDTO(saved);</span>
+    }
+    
+    @Override
+    public RuleDTO updateRule(Long id, RuleDTO ruleDTO) {
+<span class="nc" id="L50">        log.info(&quot;Updating rule: ID={}&quot;, id);</span>
+        
+<span class="nc" id="L52">        ruleDTO.setId(id);</span>
+<span class="nc" id="L53">        Rule rule = ruleMapper.toDomain(ruleDTO);</span>
+<span class="nc" id="L54">        Rule updated = ruleRepository.save(rule);</span>
+        
+<span class="nc" id="L56">        cacheService.invalidate(rule.getVehicleId());</span>
+        
+<span class="nc" id="L58">        return ruleMapper.toDTO(updated);</span>
+    }
+    
+    @Override
+    public void deleteRule(Long id) {
+<span class="nc" id="L63">        log.info(&quot;Deleting rule: ID={}&quot;, id);</span>
+        
+<span class="nc" id="L65">        Rule rule = ruleRepository.findById(id)</span>
+<span class="nc" id="L66">            .orElseThrow(() -&gt; new RuntimeException(&quot;Rule not found: &quot; + id));</span>
+        
+<span class="nc" id="L68">        ruleRepository.deleteById(id);</span>
+<span class="nc" id="L69">        cacheService.invalidate(rule.getVehicleId());</span>
+<span class="nc" id="L70">    }</span>
+    
+    @Override
+    public RuleDTO getRule(Long id) {
+<span class="nc" id="L74">        return ruleRepository.findById(id)</span>
+<span class="nc" id="L75">            .map(ruleMapper::toDTO)</span>
+<span class="nc" id="L76">            .orElseThrow(() -&gt; new RuntimeException(&quot;Rule not found: &quot; + id));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

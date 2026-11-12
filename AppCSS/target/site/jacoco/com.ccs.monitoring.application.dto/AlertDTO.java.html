@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlertDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.application.dto</a> &gt; <span class="el_source">AlertDTO.java</span></div><h1>AlertDTO.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.application.dto;
+
+import java.time.LocalDateTime;
+
+public class AlertDTO {
+    
+    private Long id;
+    private String vehicleId;
+    private Long signalId;
+    private Long ruleId;
+    private String ruleName;
+    private String level;
+    private String message;
+    private Boolean resolved;
+    private LocalDateTime createdAt;
+    private LocalDateTime resolvedAt;
+    
+    // Constructors
+<span class="nc" id="L19">    public AlertDTO() {}</span>
+    
+    // Getters and Setters
+<span class="nc" id="L22">    public Long getId() { return id; }</span>
+<span class="nc" id="L23">    public void setId(Long id) { this.id = id; }</span>
+    
+<span class="nc" id="L25">    public String getVehicleId() { return vehicleId; }</span>
+<span class="nc" id="L26">    public void setVehicleId(String vehicleId) { this.vehicleId = vehicleId; }</span>
+    
+<span class="nc" id="L28">    public Long getSignalId() { return signalId; }</span>
+<span class="nc" id="L29">    public void setSignalId(Long signalId) { this.signalId = signalId; }</span>
+    
+<span class="nc" id="L31">    public Long getRuleId() { return ruleId; }</span>
+<span class="nc" id="L32">    public void setRuleId(Long ruleId) { this.ruleId = ruleId; }</span>
+    
+<span class="nc" id="L34">    public String getRuleName() { return ruleName; }</span>
+<span class="nc" id="L35">    public void setRuleName(String ruleName) { this.ruleName = ruleName; }</span>
+    
+<span class="nc" id="L37">    public String getLevel() { return level; }</span>
+<span class="nc" id="L38">    public void setLevel(String level) { this.level = level; }</span>
+    
+<span class="nc" id="L40">    public String getMessage() { return message; }</span>
+<span class="nc" id="L41">    public void setMessage(String message) { this.message = message; }</span>
+    
+<span class="nc" id="L43">    public Boolean getResolved() { return resolved; }</span>
+<span class="nc" id="L44">    public void setResolved(Boolean resolved) { this.resolved = resolved; }</span>
+    
+<span class="nc" id="L46">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="nc" id="L47">    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }</span>
+    
+<span class="nc" id="L49">    public LocalDateTime getResolvedAt() { return resolvedAt; }</span>
+<span class="nc" id="L50">    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

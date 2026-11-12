@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VehicleEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.infrastructure.adapter.outbound.persistence.entity</a> &gt; <span class="el_source">VehicleEntity.java</span></div><h1>VehicleEntity.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.infrastructure.adapter.outbound.persistence.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;vehicles&quot;, schema = &quot;operational&quot;)
+public class VehicleEntity {
+    
+    @Id
+    @Column(name = &quot;id&quot;, length = 50)
+    private String id;
+    
+    @Column(name = &quot;license_plate&quot;, length = 20, nullable = false, unique = true)
+    private String licensePlate;
+    
+    @Column(name = &quot;vehicle_type&quot;, length = 20, nullable = false)
+    private String vehicleType;
+    
+    @Column(name = &quot;owner_id&quot;, length = 50, nullable = false)
+    private String ownerId;
+    
+    @Column(name = &quot;status&quot;, length = 20, nullable = false)
+    private String status;
+    
+    @Column(name = &quot;last_signal_time&quot;)
+    private LocalDateTime lastSignalTime;
+    
+    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
+    @Column(name = &quot;updated_at&quot;)
+    private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+<span class="nc" id="L37">        createdAt = LocalDateTime.now();</span>
+<span class="nc" id="L38">        updatedAt = LocalDateTime.now();</span>
+<span class="nc" id="L39">    }</span>
+    
+    @PreUpdate
+    protected void onUpdate() {
+<span class="nc" id="L43">        updatedAt = LocalDateTime.now();</span>
+<span class="nc" id="L44">    }</span>
+    
+    // Constructors
+<span class="nc" id="L47">    public VehicleEntity() {}</span>
+    
+    // Getters and Setters
+<span class="nc" id="L50">    public String getId() { return id; }</span>
+<span class="nc" id="L51">    public void setId(String id) { this.id = id; }</span>
+    
+<span class="nc" id="L53">    public String getLicensePlate() { return licensePlate; }</span>
+<span class="nc" id="L54">    public void setLicensePlate(String licensePlate) { this.licensePlate = licensePlate; }</span>
+    
+<span class="nc" id="L56">    public String getVehicleType() { return vehicleType; }</span>
+<span class="nc" id="L57">    public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }</span>
+    
+<span class="nc" id="L59">    public String getOwnerId() { return ownerId; }</span>
+<span class="nc" id="L60">    public void setOwnerId(String ownerId) { this.ownerId = ownerId; }</span>
+    
+<span class="nc" id="L62">    public String getStatus() { return status; }</span>
+<span class="nc" id="L63">    public void setStatus(String status) { this.status = status; }</span>
+    
+<span class="nc" id="L65">    public LocalDateTime getLastSignalTime() { return lastSignalTime; }</span>
+<span class="nc" id="L66">    public void setLastSignalTime(LocalDateTime lastSignalTime) { this.lastSignalTime = lastSignalTime; }</span>
+    
+<span class="nc" id="L68">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="nc" id="L69">    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }</span>
+    
+<span class="nc" id="L71">    public LocalDateTime getUpdatedAt() { return updatedAt; }</span>
+<span class="nc" id="L72">    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

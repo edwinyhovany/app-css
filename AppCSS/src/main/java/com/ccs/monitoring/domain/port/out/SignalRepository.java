@@ -1,3 +1,5 @@
+package com.ccs.monitoring.domain.port.out;
+
 import com.ccs.monitoring.domain.model.Signal;
 import com.ccs.monitoring.domain.valueobject.VehicleId;
 import java.time.LocalDateTime;

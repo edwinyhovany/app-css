@@ -1,5 +1,6 @@
--- Habilitar TimescaleDB extension
-CREATE EXTENSION IF NOT EXISTS timescaledb;
+-- Extensiones (siempre en public)
+CREATE EXTENSION IF NOT EXISTS timescaledb SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public;
 
 -- Esquema para datos operacionales (OLTP)
 CREATE SCHEMA IF NOT EXISTS operational;

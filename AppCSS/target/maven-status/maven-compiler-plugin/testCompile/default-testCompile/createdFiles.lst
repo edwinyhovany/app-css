@@ -1,1 +1,14 @@
-com\example\hexagonal_users_api\HexagonalUsersApiApplicationTests.class
+com\ccs\monitoring\AppCCSTests.class
+com\ccs\monitoring\infrastructure\adapter\in\rest\SignalControllerTest.class
+com\ccs\monitoring\application\service\ProcessSignalServiceTest.class
+com\ccs\monitoring\domain\model\SignalTest.class
+com\ccs\monitoring\application\mapper\SignalMapperTest.class
+com\ccs\monitoring\application\mapper\VehicleMapperTest.class
+com\ccs\monitoring\domain\service\RuleEngineTest.class
+com\ccs\monitoring\domain\valueobject\CoordinatesTest.class
+com\ccs\monitoring\domain\valueobject\RuleConditionTest.class
+com\ccs\monitoring\domain\valueobject\VehicleIdTest.class
+com\ccs\monitoring\infrastructure\adapter\in\rest\HealthControllerTest.class
+com\ccs\monitoring\application\mapper\RuleMapperTest.class
+com\ccs\monitoring\domain\model\VehicleTest.class
+com\ccs\monitoring\domain\model\RuleTest.class

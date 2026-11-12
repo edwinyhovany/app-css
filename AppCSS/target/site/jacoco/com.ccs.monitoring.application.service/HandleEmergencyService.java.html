@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HandleEmergencyService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.application.service</a> &gt; <span class="el_source">HandleEmergencyService.java</span></div><h1>HandleEmergencyService.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.application.service;
+
+import com.ccs.monitoring.application.dto.SignalDTO;
+import com.ccs.monitoring.application.mapper.SignalMapper;
+import com.ccs.monitoring.domain.model.Alert;
+import com.ccs.monitoring.domain.model.Signal;
+import com.ccs.monitoring.domain.port.in.HandleEmergencyUseCase;
+import com.ccs.monitoring.domain.port.out.AlertRepository;
+import com.ccs.monitoring.domain.port.out.NotificationService;
+import com.ccs.monitoring.domain.port.out.SignalRepository;
+import com.ccs.monitoring.domain.valueobject.AlertLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class HandleEmergencyService implements HandleEmergencyUseCase {
+    
+<span class="fc" id="L21">    private static final Logger log = LoggerFactory.getLogger(HandleEmergencyService.class);</span>
+    private static final long EMERGENCY_TIMEOUT_MS = 2000;
+    
+    private final SignalRepository signalRepository;
+    private final AlertRepository alertRepository;
+    private final NotificationService notificationService;
+    private final SignalMapper signalMapper;
+    
+    public HandleEmergencyService(
+            SignalRepository signalRepository,
+            AlertRepository alertRepository,
+            NotificationService notificationService,
+<span class="fc" id="L33">            SignalMapper signalMapper) {</span>
+<span class="fc" id="L34">        this.signalRepository = signalRepository;</span>
+<span class="fc" id="L35">        this.alertRepository = alertRepository;</span>
+<span class="fc" id="L36">        this.notificationService = notificationService;</span>
+<span class="fc" id="L37">        this.signalMapper = signalMapper;</span>
+<span class="fc" id="L38">    }</span>
+    
+    @Override
+    public void handleEmergency(SignalDTO signalDTO) {
+<span class="nc" id="L42">        long startTime = System.currentTimeMillis();</span>
+        
+        try {
+<span class="nc" id="L45">            log.warn(&quot;🚨 EMERGENCY signal received for vehicle: {}&quot;, signalDTO.getVehicleId());</span>
+            
+            // 1. Convertir y guardar señal
+<span class="nc" id="L48">            Signal signal = signalMapper.toDomain(signalDTO);</span>
+<span class="nc" id="L49">            Signal savedSignal = signalRepository.save(signal);</span>
+            
+            // 2. Crear alerta crítica
+<span class="nc" id="L52">            Alert emergencyAlert = Alert.builder()</span>
+<span class="nc" id="L53">                .vehicleId(signal.getVehicleId())</span>
+<span class="nc" id="L54">                .signalId(savedSignal.getId())</span>
+<span class="nc" id="L55">                .ruleId(null)</span>
+<span class="nc" id="L56">                .ruleName(&quot;EMERGENCY&quot;)</span>
+<span class="nc" id="L57">                .level(AlertLevel.CRITICAL)</span>
+<span class="nc" id="L58">                .message(buildEmergencyMessage(signal))</span>
+<span class="nc" id="L59">                .build();</span>
+            
+<span class="nc" id="L61">            alertRepository.save(emergencyAlert);</span>
+            
+            // 3. Notificaciones inmediatas
+<span class="nc" id="L64">            notificationService.callAuthorities(emergencyAlert);</span>
+<span class="nc" id="L65">            notificationService.sendSMS(&quot;+573001234567&quot;, emergencyAlert.getMessage());</span>
+<span class="nc" id="L66">            notificationService.sendPushNotification(&quot;emergency_team&quot;, emergencyAlert.getMessage());</span>
+            
+<span class="nc" id="L68">            long duration = System.currentTimeMillis() - startTime;</span>
+<span class="nc" id="L69">            log.info(&quot;✅ Emergency handled in {}ms&quot;, duration);</span>
+            
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (duration &gt; EMERGENCY_TIMEOUT_MS) {</span>
+<span class="nc" id="L72">                log.error(&quot;⚠️ Emergency processing exceeded {}ms: {}ms&quot;, </span>
+<span class="nc" id="L73">                    EMERGENCY_TIMEOUT_MS, duration);</span>
+            }
+            
+<span class="nc" id="L76">        } catch (Exception e) {</span>
+<span class="nc" id="L77">            log.error(&quot;❌ CRITICAL: Error handling emergency for vehicle {}: {}&quot;, </span>
+<span class="nc" id="L78">                signalDTO.getVehicleId(), e.getMessage(), e);</span>
+<span class="nc" id="L79">            throw e;</span>
+<span class="nc" id="L80">        }</span>
+<span class="nc" id="L81">    }</span>
+    
+    private String buildEmergencyMessage(Signal signal) {
+<span class="nc" id="L84">        StringBuilder msg = new StringBuilder();</span>
+<span class="nc" id="L85">        msg.append(&quot;🚨 EMERGENCIA - Vehículo: &quot;).append(signal.getVehicleId());</span>
+<span class="nc" id="L86">        msg.append(&quot; | Tipo: &quot;).append(signal.getSignalType());</span>
+<span class="nc" id="L87">        msg.append(&quot; | Hora: &quot;).append(signal.getTimestamp());</span>
+        
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (signal.getCoordinates() != null) {</span>
+<span class="nc" id="L90">            msg.append(&quot; | Ubicación: &quot;)</span>
+<span class="nc" id="L91">               .append(signal.getCoordinates().getLatitude())</span>
+<span class="nc" id="L92">               .append(&quot;, &quot;)</span>
+<span class="nc" id="L93">               .append(signal.getCoordinates().getLongitude());</span>
+        }
+        
+<span class="nc" id="L96">        return msg.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

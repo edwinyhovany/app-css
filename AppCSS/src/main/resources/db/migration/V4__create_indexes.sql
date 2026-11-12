@@ -4,7 +4,7 @@
 
 -- Índice para búsquedas por placa
 CREATE INDEX idx_vehicles_license_plate_trgm 
-    ON operational.vehicles USING gin(license_plate gin_trgm_ops);
+    ON operational.vehicles USING gin (license_plate public.gin_trgm_ops);
 
 -- Índice para owner_id + status (query frecuente: "mis vehículos activos")
 CREATE INDEX idx_vehicles_owner_status 
@@ -23,7 +23,8 @@ CREATE INDEX idx_alerts_critical_unresolved
 
 -- Índice GIN para búsquedas en metadata JSON
 CREATE INDEX idx_signals_metadata_gin 
-    ON telemetry.vehicle_signals USING gin(metadata jsonb_path_ops);
+ON telemetry.vehicle_signals 
+USING gin (metadata jsonb_path_ops);
 
 -- Estadísticas para el optimizador
 ANALYZE operational.vehicles;

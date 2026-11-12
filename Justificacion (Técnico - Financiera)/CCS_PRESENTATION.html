@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCS Vehicle Monitoring - Arquitectura Empresarial</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/black.min.css">
+    <style>
+        :root {
+            --primary-color: #00a8e8;
+            --secondary-color: #ff6b35;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+        }
+        
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .reveal h1 { color: var(--primary-color); font-size: 2.5em; }
+        .reveal h2 { color: var(--secondary-color); }
+        
+        .comparison-table {
+            font-size: 0.7em;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .comparison-table th {
+            background: var(--primary-color);
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 8px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .winner {
+            background: rgba(76, 175, 80, 0.2);
+            font-weight: bold;
+        }
+        
+        .metric-card {
+            background: rgba(0, 168, 232, 0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 10px 0;
+            text-align: left;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .architecture-diagram {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            text-align: left;
+            font-size: 0.8em;
+        }
+        
+        .pros { border-left: 4px solid var(--success-color); padding-left: 15px; }
+        .cons { border-left: 4px solid var(--danger-color); padding-left: 15px; }
+        
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            font-size: 0.7em;
+        }
+        
+        .timeline-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            font-size: 0.75em;
+        }
+        
+        .highlight {
+            background: var(--secondary-color);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .fragment.highlight-green { color: var(--success-color); }
+        .fragment.highlight-red { color: var(--danger-color); }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            
+            <!-- PORTADA -->
+            <section>
+                <h1>🚛 CCS Vehicle Monitoring</h1>
+                <h3>Arquitectura Empresarial y Justificación Técnico-Financiera</h3>
+                <p>
+                    <small>Sistema de Monitoreo Vehicular de Nueva Generación</small><br>
+                    <small>9,500 vehículos • 500 señales/segundo • <2s emergencias</small>
+                </p>
+                <p style="margin-top: 50px; font-size: 0.8em;">
+                    Febrero 2026
+                </p>
+            </section>
+
+            <!-- AGENDA -->
+            <section>
+                <h2>📋 Agenda</h2>
+                <ol style="text-align: left; font-size: 0.9em;">
+                    <li>Resumen Ejecutivo</li>
+                    <li>Contexto de Negocio</li>
+                    <li>Arquitectura Propuesta</li>
+                    <li>Comparativa de Alternativas</li>
+                    <li>Análisis Financiero (ROI)</li>
+                    <li>Riesgos y Mitigación</li>
+                    <li>Plan de Implementación</li>
+                    <li>Recomendaciones</li>
+                </ol>
+            </section>
+
+            <!-- RESUMEN EJECUTIVO -->
+            <section>
+                <h2>🎯 Resumen Ejecutivo</h2>
+                <div class="metric-card">
+                    <div class="metric-value">343%</div>
+                    <div>ROI en 3 años</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">8 meses</div>
+                    <div>Período de recuperación (Payback)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">$1.0M</div>
+                    <div>Beneficios anuales proyectados</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">&lt;2 seg</div>
+                    <div>Respuesta garantizada en emergencias</div>
+                </div>
+            </section>
+
+            <!-- PROBLEMA DE NEGOCIO -->
+            <section>
+                <h2>🔴 Problema de Negocio</h2>
+                <div style="text-align: left; font-size: 0.85em;">
+                    <h3>Situación Actual:</h3>
+                    <ul>
+                        <li>⏱️ <strong>25-43 minutos</strong> de respuesta ante emergencias</li>
+                        <li>💰 <strong>$800K/año</strong> en pérdidas por robo de vehículos</li>
+                        <li>⛽ <strong>$1.2M/año</strong> en combustible (rutas no optimizadas)</li>
+                        <li>🔧 <strong>30%</strong> de mantenimientos innecesarios</li>
+                        <li>📊 <strong>80 horas/mes</strong> en reportes manuales</li>
+                        <li>😞 <strong>85%</strong> de cumplimiento SLA con clientes</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- SOLUCIÓN PROPUESTA -->
+            <section>
+                <h2>✅ Solución Propuesta</h2>
+                <div class="architecture-diagram" style="font-size: 0.7em;">
+                    <pre style="text-align: left;">
+┌────────────────────────────────────────────────┐
+│         CAPA DE PRESENTACIÓN                   │
+│  REST API • Web Portal • Mobile App            │
+└─────────────────┬──────────────────────────────┘
+                  │
+┌─────────────────▼──────────────────────────────┐
+│         CAPA DE APLICACIÓN                     │
+│  Spring Boot 3.2 • Hexagonal Architecture      │
+└─────────────────┬──────────────────────────────┘
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+┌───────▼────┐      ┌───────▼────┐
+│ PostgreSQL │      │  RabbitMQ  │
+│ TimescaleDB│      │  Cluster   │
+│ Multi-AZ   │      │  Priority  │
+└────────────┘      └────────────┘
+                    </pre>
+                </div>
+                <p style="font-size: 0.8em; margin-top: 20px;">
+                    <strong>Deployment:</strong> Kubernetes (EKS) en AWS + Azure (DR)
+                </p>
+            </section>
+
+            <!-- CAPACIDADES HABILITADAS -->
+            <section>
+                <h2>🎯 Capacidades de Negocio Habilitadas</h2>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 0.75em;">
+                    <div class="metric-card">
+                        <h4>⚡ Monitoreo Tiempo Real</h4>
+                        <ul style="text-align: left;">
+                            <li>Alertas <2s</li>
+                            <li>Geolocalización precisa</li>
+                            <li>Temperatura carga</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card">
+                        <h4>🚨 Respuesta Emergencias</h4>
+                        <ul style="text-align: left;">
+                            <li>Botón de pánico</li>
+                            <li>Auto-alertas</li>
+                            <li>Contacto autoridades</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card">
+                        <h4>📊 Analítica Predictiva</h4>
+                        <ul style="text-align: left;">
+                            <li>Patrones de conducción</li>
+                            <li>Forecasts</li>
+                            <li>ML models</li>
+                        </ul>
+                    </div>
+                    <div class="metric-card">
+                        <h4>⚙️ Optimización Operativa</h4>
+                        <ul style="text-align: left;">
+                            <li>Rutas óptimas</li>
+                            <li>Mantenimiento predictivo</li>
+                            <li>Ahorro combustible</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COMPARATIVA DE ARQUITECTURAS -->
+            <section>
+                <h2>⚖️ Comparativa de Arquitecturas</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Criterio</th>
+                            <th>EKS (Kubernetes)</th>
+                            <th>Serverless (Lambda)</th>
+                            <th>EC2 + AutoScaling</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="winner">
+                            <td>Latencia (<2s SLA)</td>
+                            <td>✅ Garantizada</td>
+                            <td>⚠️ Cold starts</td>
+                            <td>✅ Buena</td>
+                        </tr>
+                        <tr>
+                            <td>TCO (3 años)</td>
+                            <td class="winner">✅ $689K</td>
+                            <td>❌ $866K (con riesgos)</td>
+                            <td>✅ $548K</td>
+                        </tr>
+                        <tr>
+                            <td>Escalabilidad</td>
+                            <td class="winner">✅ Excelente</td>
+                            <td>✅ Automática</td>
+                            <td>⚠️ Manual</td>
+                        </tr>
+                        <tr>
+                            <td>Portabilidad</td>
+                            <td class="winner">✅ Multi-cloud</td>
+                            <td>❌ Lock-in AWS</td>
+                            <td>⚠️ Limitada</td>
+                        </tr>
+                        <tr>
+                            <td>Complejidad</td>
+                            <td>⚠️ Media</td>
+                            <td>⚠️ Alta (debugging)</td>
+                            <td>✅ Baja</td>
+                        </tr>
+                        <tr>
+                            <td>Time to Market</td>
+                            <td>✅ 3 meses</td>
+                            <td>✅ 4-6 meses</td>
+                            <td>⚠️ 3-4 meses</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- DECISIÓN: EKS VENTAJAS -->
+            <section>
+                <h2>✅ Por qué EKS (Kubernetes)</h2>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h3 style="color: var(--success-color);">✅ Ventajas</h3>
+                        <ul>
+                            <li><strong>Latencia garantizada:</strong> Sin cold starts</li>
+                            <li><strong>Portabilidad:</strong> Migrar a GKE/AKS sin reescribir</li>
+                            <li><strong>Control total:</strong> Configuración fine-grained</li>
+                            <li><strong>Ecosistema maduro:</strong> Helm, Operators, CNCF</li>
+                            <li><strong>Talent disponible:</strong> Kubernetes skills transferibles</li>
+                            <li><strong>Multi-cloud:</strong> DR en Azure sin vendor lock-in</li>
+                            <li><strong>Costo predecible:</strong> Sin sorpresas en billing</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h3 style="color: var(--warning-color);">⚠️ Consideraciones</h3>
+                        <ul>
+                            <li><strong>Curva aprendizaje:</strong> Equipo debe aprender K8s</li>
+                            <li><strong>Operación:</strong> Requiere 2 DevOps dedicados</li>
+                            <li><strong>Complejidad inicial:</strong> Setup más largo que serverless</li>
+                            <li><strong>Gestión de infraestructura:</strong> Patching nodes</li>
+                        </ul>
+                        <h3 style="color: var(--success-color); margin-top: 20px;">✅ Mitigación</h3>
+                        <ul>
+                            <li>Training equipo (incluido en CAPEX)</li>
+                            <li>Managed node groups (auto-patching)</li>
+                            <li>IaC con Terraform (automatización)</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DECISIÓN: POR QUÉ NO SERVERLESS -->
+            <section>
+                <h2>❌ Por qué NO Serverless</h2>
+                <div style="text-align: left; font-size: 0.85em;">
+                    <h3 style="color: var(--danger-color);">Riesgos Críticos:</h3>
+                    <ol>
+                        <li><strong>Cold Starts (250-300ms):</strong>
+                            <ul>
+                                <li>Procesamiento emergencia: 800ms + 250ms = 1050ms</li>
+                                <li>En burst (100 emergencias): Múltiples cold starts</li>
+                                <li>Riesgo de superar 2s → <span class="highlight">Penalidades $100K/año</span></li>
+                            </ul>
+                        </li>
+                        <li><strong>Vendor Lock-in Extremo:</strong>
+                            <ul>
+                                <li>Step Functions, EventBridge = propietarios de AWS</li>
+                                <li>Migrar a Azure = reescribir TODA la aplicación</li>
+                            </ul>
+                        </li>
+                        <li><strong>Debugging Complejo:</strong>
+                            <ul>
+                                <li>Logs distribuidos en CloudWatch</li>
+                                <li>Difícil troubleshooting de workflows</li>
+                            </ul>
+                        </li>
+                        <li><strong>Límites de Concurrencia:</strong>
+                            <ul>
+                                <li>1000 ejecuciones concurrentes (default)</li>
+                                <li>Throttling en picos de carga</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- ANÁLISIS FINANCIERO -->
+            <section>
+                <h2>💰 Análisis Financiero: TCO 3 Años</h2>
+                <div class="cost-breakdown">
+                    <div>
+                        <h3 style="color: var(--primary-color);">CAPEX (Año 0)</h3>
+                        <table style="width: 100%; font-size: 0.9em;">
+                            <tr><td>Desarrollo inicial</td><td style="text-align: right;">$50,000</td></tr>
+                            <tr><td>Infrastructure as Code</td><td style="text-align: right;">$10,000</td></tr>
+                            <tr><td>Seguridad (pen test)</td><td style="text-align: right;">$15,000</td></tr>
+                            <tr><td>Training equipo</td><td style="text-align: right;">$8,000</td></tr>
+                            <tr style="border-top: 2px solid var(--primary-color); font-weight: bold;">
+                                <td>TOTAL CAPEX</td><td style="text-align: right;">$83,000</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--secondary-color);">OPEX (Anual)</h3>
+                        <table style="width: 100%; font-size: 0.9em;">
+                            <tr><td>AWS (EKS + RDS + MQ)</td><td style="text-align: right;">$47,160</td></tr>
+                            <tr><td>Azure (DR + Analytics)</td><td style="text-align: right;">$12,000</td></tr>
+                            <tr><td>Monitoring (Datadog)</td><td style="text-align: right;">$6,000</td></tr>
+                            <tr><td>Operación (2 DevOps)</td><td style="text-align: right;">$120,000</td></tr>
+                            <tr><td>Soporte AWS Enterprise</td><td style="text-align: right;">$15,000</td></tr>
+                            <tr style="border-top: 2px solid var(--secondary-color); font-weight: bold;">
+                                <td>TOTAL OPEX/año</td><td style="text-align: right;">$201,960</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="metric-card" style="margin-top: 20px;">
+                    <strong>TCO 3 años:</strong> $83,000 + ($201,960 × 3) = <span style="color: var(--primary-color); font-size: 1.5em;">$688,880</span>
+                </div>
+            </section>
+
+            <!-- ROI -->
+            <section>
+                <h2>📈 Retorno de Inversión (ROI)</h2>
+                <div style="text-align: left; font-size: 0.8em;">
+                    <h3>Beneficios Anuales:</h3>
+                    <table class="comparison-table">
+                        <tr><td>Reducción robos (35%)</td><td>$280,000</td></tr>
+                        <tr><td>Optimización combustible (15%)</td><td>$180,000</td></tr>
+                        <tr><td>Reducción mantenimiento (40%)</td><td>$200,000</td></tr>
+                        <tr><td>Ahorro administrativo</td><td>$18,720</td></tr>
+                        <tr><td>Reducción multas (67%)</td><td>$80,400</td></tr>
+                        <tr><td>Mejora SLA → retención</td><td>$260,000</td></tr>
+                        <tr style="background: rgba(76, 175, 80, 0.2); font-weight: bold; font-size: 1.1em;">
+                            <td>TOTAL BENEFICIOS/AÑO</td><td>$1,019,120</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="metric-card" style="margin-top: 20px;">
+                    <div><strong>Payback Period:</strong> <span class="metric-value" style="font-size: 1.5em;">8 meses</span></div>
+                    <div><strong>ROI 3 años:</strong> <span class="metric-value" style="font-size: 1.5em;">343%</span></div>
+                    <div><strong>NPV (10% discount):</strong> <span class="metric-value" style="font-size: 1.5em;">$1.84M</span></div>
+                </div>
+            </section>
+
+            <!-- COMPARATIVA COSTOS -->
+            <section>
+                <h2>💵 Comparativa de Costos (3 años)</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Arquitectura</th>
+                            <th>CAPEX</th>
+                            <th>OPEX (3y)</th>
+                            <th>Riesgo</th>
+                            <th>TCO Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="winner">
+                            <td><strong>EKS + Managed</strong> ✅</td>
+                            <td>$83K</td>
+                            <td>$606K</td>
+                            <td>Bajo</td>
+                            <td><strong>$689K</strong></td>
+                        </tr>
+                        <tr>
+                            <td>EC2 + AutoScaling</td>
+                            <td>$50K</td>
+                            <td>$498K</td>
+                            <td>Medio</td>
+                            <td>$548K</td>
+                        </tr>
+                        <tr style="background: rgba(244, 67, 54, 0.2);">
+                            <td>Serverless ❌</td>
+                            <td>$122K</td>
+                            <td>$393K</td>
+                            <td><strong>Alto</strong></td>
+                            <td><strong>$866K*</strong></td>
+                        </tr>
+                        <tr>
+                            <td>ECS Fargate</td>
+                            <td>$90K</td>
+                            <td>$638K</td>
+                            <td>Medio</td>
+                            <td>$728K</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="font-size: 0.7em; margin-top: 20px;">
+                    * Serverless incluye $351K en costos de riesgo (penalidades SLA + downtime)
+                </p>
+            </section>
+
+            <!-- SEGURIDAD -->
+            <section>
+                <h2>🔒 Seguridad: Defensa en Profundidad</h2>
+                <div style="font-size: 0.7em; text-align: left;">
+                    <div class="architecture-diagram">
+                        <pre>
+┌─────────────────────────────────────────────┐
+│ CAPA 1: PERÍMETRO                           │
+│ • AWS WAF • DDoS Protection • Rate Limiting │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ CAPA 2: RED                                 │
+│ • VPC Isolation • Security Groups • ACLs    │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ CAPA 3: COMPUTE                             │
+│ • Image Scanning • Runtime Security • PSS   │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ CAPA 4: APLICACIÓN                          │
+│ • OWASP Top 10 • Input Validation • CSRF    │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ CAPA 5: DATOS                               │
+│ • Encryption at Rest (AES-256)              │
+│ • Encryption in Transit (TLS 1.3)           │
+└─────────────────────────────────────────────┘
+                        </pre>
+                    </div>
+                    <p><strong>Compliance:</strong> ISO 27001 (85%), GDPR (90%), Ley 1581 Colombia (100%)</p>
+                </div>
+            </section>
+
+            <!-- ESCALABILIDAD -->
+            <section>
+                <h2>📊 Escalabilidad Demostrada</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Actual (9.5K veh)</th>
+                            <th>Futuro (16.4K veh)</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Señales/segundo</td>
+                            <td>500</td>
+                            <td>863</td>
+                            <td>+5 pods (auto-scale)</td>
+                        </tr>
+                        <tr>
+                            <td>Workers RabbitMQ</td>
+                            <td>13</td>
+                            <td>23</td>
+                            <td>Config change</td>
+                        </tr>
+                        <tr>
+                            <td>DB connections</td>
+                            <td>70</td>
+                            <td>120</td>
+                            <td>Pool adjustment</td>
+                        </tr>
+                        <tr>
+                            <td>Redis memory</td>
+                            <td>256 MB</td>
+                            <td>512 MB</td>
+                            <td>Vertical scaling</td>
+                        </tr>
+                        <tr class="winner">
+                            <td colspan="4"><strong>✅ Sin cambios de código</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- RIESGOS -->
+            <section>
+                <h2>⚠️ Riesgos y Mitigación</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Riesgo</th>
+                            <th>Probabilidad</th>
+                            <th>Impacto</th>
+                            <th>Mitigación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Falta expertise K8s</td>
+                            <td>Media</td>
+                            <td>Alto</td>
+                            <td>Training + AWS Support Enterprise</td>
+                        </tr>
+                        <tr>
+                            <td>Exceder presupuesto</td>
+                            <td>Baja</td>
+                            <td>Medio</td>
+                            <td>Cost alerts + Reserved Instances</td>
+                        </tr>
+                        <tr>
+                            <td>Downtime en migración</td>
+                            <td>Media</td>
+                            <td>Alto</td>
+                            <td>Blue-Green deployment + Rollback plan</td>
+                        </tr>
+                        <tr>
+                            <td>Breach seguridad</td>
+                            <td>Baja</td>
+                            <td>Crítico</td>
+                            <td>7 capas defensa + Pen test anual</td>
+                        </tr>
+                        <tr>
+                            <td>Vendor lock-in (AWS)</td>
+                            <td>Baja</td>
+                            <td>Medio</td>
+                            <td>Kubernetes = portable + DR en Azure</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- PLAN DE IMPLEMENTACIÓN -->
+            <section>
+                <h2>🚀 Plan de Implementación</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h3 style="color: var(--primary-color);">FASE 1</h3>
+                        <p><strong>Mes 1-2</strong></p>
+                        <ul style="text-align: left;">
+                            <li>MVP en EKS</li>
+                            <li>Core monitoring</li>
+                            <li>1,000 vehículos piloto</li>
+                        </ul>
+                    </div>
+                    <div class="timeline-item">
+                        <h3 style="color: var(--primary-color);">FASE 2</h3>
+                        <p><strong>Mes 3-4</strong></p>
+                        <ul style="text-align: left;">
+                            <li>Producción</li>
+                            <li>9,500 vehículos</li>
+                            <li>Multi-AZ</li>
+                        </ul>
+                    </div>
+                    <div class="timeline-item">
+                        <h3 style="color: var(--primary-color);">FASE 3</h3>
+                        <p><strong>Mes 5-6</strong></p>
+                        <ul style="text-align: left;">
+                            <li>DR (Azure)</li>
+                            <li>Analytics (Synapse)</li>
+                            <li>Power BI</li>
+                        </ul>
+                    </div>
+                    <div class="timeline-item">
+                        <h3 style="color: var(--primary-color);">FASE 4</h3>
+                        <p><strong>Año 2</strong></p>
+                        <ul style="text-align: left;">
+                            <li>ML predictivo</li>
+                            <li>Mobile app</li>
+                            <li>Expansión regional</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RECOMENDACIONES -->
+            <section>
+                <h2>✅ Recomendaciones</h2>
+                <div style="text-align: left; font-size: 0.85em;">
+                    <h3 style="color: var(--success-color);">DECISIÓN: Arquitectura EKS (AWS) + AKS (Azure DR)</h3>
+                    
+                    <div class="metric-card">
+                        <h4>🎯 Justificación en 3 Puntos:</h4>
+                        <ol>
+                            <li><strong>NEGOCIO:</strong> ROI 343% en 3 años, payback en 8 meses</li>
+                            <li><strong>TÉCNICA:</strong> Única arquitectura que GARANTIZA <2s en emergencias</li>
+                            <li><strong>ESTRATÉGICA:</strong> Sin vendor lock-in, portable, skill transferible</li>
+                        </ol>
+                    </div>
+
+                    <h3 style="color: var(--primary-color); margin-top: 30px;">Próximos Pasos:</h3>
+                    <ol>
+                        <li>Aprobación presupuesto ($83K CAPEX)</li>
+                        <li>Contratar 2 DevOps con exp. Kubernetes</li>
+                        <li>Iniciar Fase 1 (MVP) - 2 meses</li>
+                        <li>Training equipo en K8s/EKS</li>
+                        <li>Setup AWS Organization + Landing Zone</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- CONCLUSIÓN -->
+            <section>
+                <h2>🎯 Conclusión</h2>
+                <div class="metric-card">
+                    <h3>Proyecto ALTAMENTE RENTABLE</h3>
+                    <ul style="text-align: left; font-size: 0.9em;">
+                        <li>✅ <strong>ROI excepcional:</strong> 343% en 3 años</li>
+                        <li>✅ <strong>Beneficios tangibles:</strong> $1M/año en ahorros y revenue</li>
+                        <li>✅ <strong>Riesgo controlado:</strong> Mitigaciones en todos los frentes</li>
+                        <li>✅ <strong>Escalable:</strong> 72% crecimiento sin refactoring</li>
+                        <li>✅ <strong>Estratégico:</strong> Ventaja competitiva sostenible</li>
+                    </ul>
+                </div>
+                <div style="margin-top: 40px; padding: 20px; background: rgba(0, 168, 232, 0.2); border-radius: 10px;">
+                    <h2 style="color: var(--success-color);">Recomendación: APROBAR</h2>
+                    <p>La arquitectura propuesta maximiza valor de negocio mientras minimiza riesgo técnico</p>
+                </div>
+            </section>
+
+            <!-- Q&A -->
+            <section>
+                <h1>❓ Preguntas</h1>
+                <p style="font-size: 1.2em; margin-top: 50px;">
+                    ¿Consultas sobre la arquitectura,<br>
+                    costos o implementación?
+                </p>
+                <p style="margin-top: 80px; font-size: 0.8em; color: #666;">
+                    Contacto: arquitectura@ccs.com
+                </p>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+            controls: true,
+            progress: true,
+            center: true,
+            slideNumber: 'c/t',
+            keyboard: true,
+            overview: true,
+            touch: true,
+            fragments: true
+        });
+    </script>
+</body>
+</html>

@@ -1,3 +1,5 @@
+package com.ccs.monitoring.application.mapper;
+
 import com.ccs.monitoring.application.dto.VehicleDTO;
 import com.ccs.monitoring.domain.model.Vehicle;
 import com.ccs.monitoring.domain.valueobject.VehicleId;

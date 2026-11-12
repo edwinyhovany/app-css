@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VehicleMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.application.mapper</a> &gt; <span class="el_source">VehicleMapper.java</span></div><h1>VehicleMapper.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.application.mapper;
+
+import com.ccs.monitoring.application.dto.VehicleDTO;
+import com.ccs.monitoring.domain.model.Vehicle;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="fc" id="L9">public class VehicleMapper {</span>
+    
+    public Vehicle toDomain(VehicleDTO dto) {
+<span class="fc" id="L12">        return new Vehicle(</span>
+<span class="fc" id="L13">            new VehicleId(dto.getId()),</span>
+<span class="fc" id="L14">            dto.getLicensePlate(),</span>
+<span class="fc" id="L15">            Vehicle.VehicleType.valueOf(dto.getVehicleType()),</span>
+<span class="fc" id="L16">            dto.getOwnerId()</span>
+        );
+    }
+    
+    public VehicleDTO toDTO(Vehicle vehicle) {
+<span class="nc" id="L21">        VehicleDTO dto = new VehicleDTO();</span>
+<span class="nc" id="L22">        dto.setId(vehicle.getVehicleId().getValue());</span>
+<span class="nc" id="L23">        dto.setLicensePlate(vehicle.getLicensePlate());</span>
+<span class="nc" id="L24">        dto.setVehicleType(vehicle.getType().name());</span>
+<span class="nc" id="L25">        dto.setOwnerId(vehicle.getOwnerId());</span>
+<span class="nc" id="L26">        dto.setStatus(vehicle.getStatus().name());</span>
+<span class="nc" id="L27">        dto.setLastSignalTime(vehicle.getLastSignalTime());</span>
+<span class="nc" id="L28">        dto.setCreatedAt(vehicle.getCreatedAt());</span>
+<span class="nc" id="L29">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

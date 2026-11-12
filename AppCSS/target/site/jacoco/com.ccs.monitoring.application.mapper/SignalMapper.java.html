@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignalMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CCS Vehicle Monitoring</a> &gt; <a href="index.source.html" class="el_package">com.ccs.monitoring.application.mapper</a> &gt; <span class="el_source">SignalMapper.java</span></div><h1>SignalMapper.java</h1><pre class="source lang-java linenums">package com.ccs.monitoring.application.mapper;
+
+import com.ccs.monitoring.application.dto.SignalDTO;
+import com.ccs.monitoring.domain.model.Signal;
+import com.ccs.monitoring.domain.valueobject.Coordinates;
+import com.ccs.monitoring.domain.valueobject.SignalType;
+import com.ccs.monitoring.domain.valueobject.VehicleId;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="fc" id="L11">public class SignalMapper {</span>
+    
+    public Signal toDomain(SignalDTO dto) {
+<span class="fc" id="L14">        Coordinates coordinates = null;</span>
+<span class="pc bpc" id="L15" title="3 of 4 branches missed.">        if (dto.getLatitude() != null &amp;&amp; dto.getLongitude() != null) {</span>
+<span class="nc" id="L16">            coordinates = new Coordinates(dto.getLatitude(), dto.getLongitude());</span>
+        }
+        
+<span class="fc" id="L19">        return Signal.builder()</span>
+<span class="fc" id="L20">            .id(dto.getId())</span>
+<span class="fc" id="L21">            .vehicleId(new VehicleId(dto.getVehicleId()))</span>
+<span class="fc" id="L22">            .signalType(SignalType.valueOf(dto.getSignalType()))</span>
+<span class="fc" id="L23">            .timestamp(dto.getTimestamp())</span>
+<span class="fc" id="L24">            .coordinates(coordinates)</span>
+<span class="fc" id="L25">            .speed(dto.getSpeed())</span>
+<span class="fc" id="L26">            .direction(dto.getDirection())</span>
+<span class="fc" id="L27">            .temperature(dto.getTemperature())</span>
+<span class="fc" id="L28">            .cargoStatus(dto.getCargoStatus())</span>
+<span class="fc" id="L29">            .emergency(dto.isEmergency())</span>
+<span class="fc" id="L30">            .metadata(dto.getMetadata())</span>
+<span class="fc" id="L31">            .build();</span>
+    }
+    
+    public SignalDTO toDTO(Signal signal) {
+<span class="fc" id="L35">        SignalDTO dto = new SignalDTO();</span>
+<span class="fc" id="L36">        dto.setId(signal.getId());</span>
+<span class="fc" id="L37">        dto.setVehicleId(signal.getVehicleId().getValue());</span>
+<span class="fc" id="L38">        dto.setSignalType(signal.getSignalType().name());</span>
+<span class="fc" id="L39">        dto.setTimestamp(signal.getTimestamp());</span>
+        
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (signal.getCoordinates() != null) {</span>
+<span class="nc" id="L42">            dto.setLatitude(signal.getCoordinates().getLatitude());</span>
+<span class="nc" id="L43">            dto.setLongitude(signal.getCoordinates().getLongitude());</span>
+        }
+        
+<span class="fc" id="L46">        dto.setSpeed(signal.getSpeed());</span>
+<span class="fc" id="L47">        dto.setDirection(signal.getDirection());</span>
+<span class="fc" id="L48">        dto.setTemperature(signal.getTemperature());</span>
+<span class="fc" id="L49">        dto.setCargoStatus(signal.getCargoStatus());</span>
+<span class="fc" id="L50">        dto.setEmergency(signal.isEmergency());</span>
+<span class="fc" id="L51">        dto.setMetadata(signal.getMetadata());</span>
+        
+<span class="fc" id="L53">        return dto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

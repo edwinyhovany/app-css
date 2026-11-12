@@ -33,28 +33,59 @@ public class RuleCondition {
     }
     
     private boolean evaluateThreshold(Signal signal) {
-        if ("speed".equals(parameter) && signal.getSpeed() != null) {
-            BigDecimal signalSpeed = signal.getSpeed();
-            BigDecimal thresholdValue = new BigDecimal(value);
-            
-            switch (operator) {
-                case ">": return signalSpeed.compareTo(thresholdValue) > 0;
-                case "<": return signalSpeed.compareTo(thresholdValue) < 0;
-                case ">=": return signalSpeed.compareTo(thresholdValue) >= 0;
-                case "<=": return signalSpeed.compareTo(thresholdValue) <= 0;
-                case "=": return signalSpeed.compareTo(thresholdValue) == 0;
-                default: return false;
+        
+        if ("speed".equals(parameter) && signal.getSpeed() != null && value != null) {
+            try {
+                BigDecimal signalSpeed = signal.getSpeed();
+                BigDecimal thresholdValue = new BigDecimal(value);
+                
+                if (operator == null) {
+                    return false;
+                }
+                
+                switch (operator) {
+                    case ">": 
+                        return signalSpeed.compareTo(thresholdValue) > 0;
+                    case "<": 
+                        return signalSpeed.compareTo(thresholdValue) < 0;
+                    case ">=": 
+                        return signalSpeed.compareTo(thresholdValue) >= 0;
+                    case "<=": 
+                        return signalSpeed.compareTo(thresholdValue) <= 0;
+                    case "=": 
+                    case "==":
+                        return signalSpeed.compareTo(thresholdValue) == 0;
+                    default: 
+                        return false;
+                }
+            } catch (NumberFormatException e) {
+                return false;
             }
         }
         
-        if ("temperature".equals(parameter) && signal.getTemperature() != null) {
-            BigDecimal signalTemp = signal.getTemperature();
-            BigDecimal thresholdValue = new BigDecimal(value);
-            
-            switch (operator) {
-                case ">": return signalTemp.compareTo(thresholdValue) > 0;
-                case "<": return signalTemp.compareTo(thresholdValue) < 0;
-                default: return false;
+        if ("temperature".equals(parameter) && signal.getTemperature() != null && value != null) {
+            try {
+                BigDecimal signalTemp = signal.getTemperature();
+                BigDecimal thresholdValue = new BigDecimal(value);
+                
+                if (operator == null) {
+                    return false;
+                }
+                
+                switch (operator) {
+                    case ">": 
+                        return signalTemp.compareTo(thresholdValue) > 0;
+                    case "<": 
+                        return signalTemp.compareTo(thresholdValue) < 0;
+                    case ">=": 
+                        return signalTemp.compareTo(thresholdValue) >= 0;
+                    case "<=": 
+                        return signalTemp.compareTo(thresholdValue) <= 0;
+                    default: 
+                        return false;
+                }
+            } catch (NumberFormatException e) {
+                return false;
             }
         }
         

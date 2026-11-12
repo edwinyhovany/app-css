@@ -1,6 +1,7 @@
 -- ==============================================
 -- ESQUEMA TELEMETRY - Hypertable para Time-Series
 -- ==============================================
+SET search_path TO telemetry, public, _timescaledb_functions;
 
 -- Tabla de señales de telemetría
 CREATE TABLE telemetry.vehicle_signals (
@@ -68,29 +69,5 @@ SELECT add_retention_policy(
     if_not_exists => TRUE
 );
 
--- Continuous aggregate para métricas por hora (opcional pero útil)
-CREATE MATERIALIZED VIEW telemetry.signals_hourly
-WITH (timescaledb.continuous) AS
-SELECT 
-    vehicle_id,
-    time_bucket('1 hour', timestamp) AS hour,
-    COUNT(*) as signal_count,
-    AVG(speed) as avg_speed,
-    MAX(speed) as max_speed,
-    COUNT(*) FILTER (WHERE emergency = TRUE) as emergency_count
-FROM telemetry.vehicle_signals
-GROUP BY vehicle_id, hour
-WITH NO DATA;
-
--- Política de refresh para la vista materializada
-SELECT add_continuous_aggregate_policy(
-    'telemetry.signals_hourly',
-    start_offset => INTERVAL '3 hours',
-    end_offset => INTERVAL '1 hour',
-    schedule_interval => INTERVAL '1 hour',
-    if_not_exists => TRUE
-);
-
 -- Comentarios para documentación
 COMMENT ON TABLE telemetry.vehicle_signals IS 'Hypertable de señales de telemetría - particionada por día, compresión automática después de 7 días, retención 180 días';
-COMMENT ON MATERIALIZED VIEW telemetry.signals_hourly IS 'Vista materializada con agregaciones por hora para queries analíticas rápidas';
